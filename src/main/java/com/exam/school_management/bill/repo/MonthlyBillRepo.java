@@ -31,9 +31,8 @@ public interface MonthlyBillRepo extends JpaRepository<MonthlyBillInfo,Long> {
             "WHERE s.studentInfo.classInfo.id = :classId " +
             "AND s.studentInfo.roll = :roll " +
             "AND s.academicYear = :queryYear " +
-            "AND (s.paidBill IS NULL OR s.monthlyBill != COALESCE(s.paidBill, 0) ) " + // 💡 Safe for both unpaid and partial paid bills
-            "ORDER BY s.monthInfo.monthId ASC") // 💡 Notice the clean space before ORDER BY
-
+            "AND (s.paidBill IS NULL OR s.monthlyBill > COALESCE(s.paidBill, 0)) " + // 💡 Changed != to > to strictly get unpaid/underpaid
+            "ORDER BY s.monthInfo.monthId ASC")
     List<MonthlyBillInfo> findUnpaidBillsByClassAndRoll(
             @Param("classId") Long classId,
             @Param("roll") Long roll,

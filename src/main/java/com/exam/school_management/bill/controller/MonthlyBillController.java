@@ -34,8 +34,6 @@ public class MonthlyBillController {
         List<MonthlyBillInfo> list = new ArrayList<>();
 
         for (BillDTO dto : dtos) {
-            System.out.println("facility fees:" + dto.getFacilityfee());
-            System.out.println("stuId" + dto.getStuUniqueId());
 
             MonthlyBillInfo entity = new MonthlyBillInfo();
             entity.setAcademicYear(dto.getAcademicYear());
@@ -45,7 +43,7 @@ public class MonthlyBillController {
             entity.setBillCreateDate(new Date());
 
             Optional<ClassInfo> cls = classServiceImp.findById(dto.getClassId());
-            System.out.println("fes" + cls);
+
 
             if (dto.getFacilityfee() != null) {
                 entity.setMonthlyBill(dto.getFacilityfee());
@@ -58,7 +56,6 @@ public class MonthlyBillController {
                         classId == Status.SEVEN.getValue().longValue() ||
                         classId == Status.EIGHT.getValue().longValue() ||
                         classId == Status.NINE.getValue().longValue()) {
-                    System.out.println("final tuition fees entered:" + tuitionFees);
                     entity.setMonthlyBill(tuitionFees);
                 }
             }
@@ -92,7 +89,6 @@ public class MonthlyBillController {
     @GetMapping("/dues/search/{classId}/{roll}/{queryYear}")
     public List<MonthlyBillInfo> getSearchResult(@PathVariable Long classId, @PathVariable Long roll,@PathVariable String queryYear){
         List<MonthlyBillInfo> list=monthlyBillService.findUnpaidBillByClassAndRoll(classId,roll,queryYear);
-        System.out.println("list dues::"+list);
        return list;
     }
 

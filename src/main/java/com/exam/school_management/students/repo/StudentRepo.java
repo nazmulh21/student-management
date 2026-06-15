@@ -42,4 +42,6 @@ public interface StudentRepo extends JpaRepository<StudentInfo, Long> {
     List<StudentInfo> findAllByAcademicYearAndScholarshipInfoScholarshipIdIsNullAndIsActiveTrue(Long academicYear);
 
 
+    List<StudentInfo> findAllByAcademicYearAndIsActiveTrue(Long academicYear);
+
 }

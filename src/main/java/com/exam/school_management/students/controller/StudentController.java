@@ -236,4 +236,11 @@ public class StudentController {
         List<StudentInfo> list = studentService.getAllStudentByAcademicYear(year);
         return ResponseEntity.ok(list);
     }
+
+    @GetMapping("/all-active")
+    public ResponseEntity<List<StudentInfo>> getAllActiveList(){
+        Long year = (long) YearMonth.now().getYear();
+        List<StudentInfo> list=studentService.getAllActiveStudent(year);
+        return ResponseEntity.ok(list);
+    }
 }

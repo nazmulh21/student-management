@@ -259,4 +259,9 @@ public class StudentService {
         return studentRepo.findAllByAcademicYearAndScholarshipInfoScholarshipIdIsNullAndIsActiveTrue(academicYear);
 }
 
+
+public List<StudentInfo> getAllActiveStudent(Long academicYear){
+        return studentRepo.findAllByAcademicYearAndIsActiveTrue(academicYear);
+}
+
 }

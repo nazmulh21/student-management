@@ -7,7 +7,8 @@ import java.math.BigDecimal;
 @Data
 public class OthersBillDTO {
     private Long studentId;
-    private Long CollectionCategoryId;
-    private BigDecimal othersBill;
+    private Long collectionCategoryId;
+
+
 
 }
