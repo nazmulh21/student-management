@@ -3,6 +3,7 @@ package com.exam.school_management.classes.service;
 
 import com.exam.school_management.classes.model.ClassInfo;
 import com.exam.school_management.classes.repo.ClassRepo;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +24,7 @@ public class ClassServiceImp {
     }
 
     public List<ClassInfo> getClassList(){
-        return classrepo.findAll();
+        return classrepo.findAll(Sort.by(Sort.Direction.ASC, "id"));
     }
 
     public Optional<ClassInfo> findById(Long id){

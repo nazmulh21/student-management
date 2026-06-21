@@ -33,6 +33,9 @@ public class MonthlyBillInfo {
     @Column(name = "paid_bill")
     private BigDecimal paidBill;
 
+    @Column(name = "discount")
+    private BigDecimal discount;
+
     @Column(name = "transaction_id")
     private String transactionId;
 
@@ -42,8 +45,16 @@ public class MonthlyBillInfo {
     @Column(name = "bill_create_date")
     private Date billCreateDate;
 
+    @Column(name = "bill_paid_date")
+     private Date billPaidDate;
+
     @Column(name = "create_by")
     private Long createBy;
 
+    public MonthlyBillInfo() {
+    }
 
+    public MonthlyBillInfo(Long monthlyBillId) {
+        this.monthlyBillId = monthlyBillId;
+    }
 }

@@ -46,22 +46,36 @@ public class ClassController {
     public ResponseEntity<?> updateCategory(
             @PathVariable Long id,
             @RequestBody ClassInfo updatedData) {
-        return classServiceImp.findById(id)
-                .map(existingCategory -> {
-                    // 2. Update the field(s) with the new data from React
-                    existingCategory.setClassName(updatedData.getClassName());
-                    existingCategory.setTuitionFees(updatedData.getTuitionFees());
-                    existingCategory.setExamFees(updatedData.getExamFees());
 
-                    // 3. Save the updated entity back to the database
-                    ClassInfo savedData = classServiceImp.doSave(existingCategory);
+        // 1. Capture the Optional directly from your service
+        java.util.Optional<ClassInfo> classOptional = classServiceImp.findById(id);
 
-                    // 4. Return 200 OK along with the freshly updated object
-                    return ResponseEntity.ok(savedData);
-                })
-                // 5. If the ID wasn't found, return a clean 404 Not Found to Axios
-                .orElse(ResponseEntity.notFound().build());
+        // 2. Check if the data actually exists inside the Optional container
+        if (!classOptional.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        try {
+            // 3. Extract the real ClassInfo object using .get()
+            ClassInfo existingCategory = classOptional.get();
+
+            // 4. Update the fields safely
+            existingCategory.setClassName(updatedData.getClassName());
+            existingCategory.setTuitionFees(updatedData.getTuitionFees());
+            existingCategory.setExamFees(updatedData.getExamFees());
+
+            // 5. Save back to database
+            ClassInfo savedData = classServiceImp.doSave(existingCategory);
+
+            // 6. Return the updated data to React
+            return ResponseEntity.ok(savedData);
+
+        } catch (Exception e) {
+            e.printStackTrace(); // Prints errors to your Spring Boot terminal console
+            return ResponseEntity.status(500).body("Error updating class data: " + e.getMessage());
+        }
     }
+
 
     @GetMapping("/{id}")
     public Optional<ClassInfo> findClassInfo(@PathVariable Long id){

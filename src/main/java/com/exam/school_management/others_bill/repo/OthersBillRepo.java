@@ -36,7 +36,7 @@ public interface OthersBillRepo extends JpaRepository<OthersBillInfo, Long> {
             "WHERE s.studentInfo.classInfo.id = :classId " +
             "AND s.studentInfo.roll = :roll " +
             "AND s.studentInfo.academicYear = :queryYear " +
-            "AND (s.paidBill IS NULL OR s.othersBill > COALESCE(s.paidBill, 0)) " + // 💡 Changed != to > to strictly get unpaid/underpaid
+            "AND (s.othersBill > (COALESCE(s.paidBill, 0) + COALESCE(s.discount, 0))) " + // 💡 paidBill এবং discount যোগ করে তুলনা করা হচ্ছে
             "ORDER BY s.studentInfo.academicYear ASC")
     List<OthersBillInfo> findUnpaidBillsByClassAndRoll(
             @Param("classId") Long classId,

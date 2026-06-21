@@ -9,12 +9,13 @@ import com.exam.school_management.district.repo.DistrictRepo;
 import com.exam.school_management.enums.Status;
 import com.exam.school_management.scholarship.model.ScholarshipInfo;
 import com.exam.school_management.scholarship.repo.ScholarshipRepo;
+import com.exam.school_management.students.repo.StudentRepo;
 import com.exam.school_management.thana.model.ThanaInfo;
 import com.exam.school_management.thana.repo.ThanaRepo;
 import com.exam.school_management.union.model.UnionInfo;
 import com.exam.school_management.union.repo.UnionRepo;
 import com.exam.school_management.students.model.StudentInfo;
-import com.exam.school_management.students.repository.StudentRepo;
+
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

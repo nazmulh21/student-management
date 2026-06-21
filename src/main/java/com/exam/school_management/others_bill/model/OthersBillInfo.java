@@ -30,8 +30,14 @@ public class OthersBillInfo {
     @Column(name="paid_bill")
     private BigDecimal paidBill;
 
+    @Column(name="discount")
+    private BigDecimal discount;
+
     @Column(name="create_date")
     private Date ceateDate;
+
+    @Column(name="paid_date")
+    private Date paidDate;
 
     @Column(name="create_by")
     private Long createBy;

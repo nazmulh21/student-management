@@ -2,18 +2,25 @@ package com.exam.school_management.bill.controller;
 
 import com.exam.school_management.bill.dto.BillDTO;
 import com.exam.school_management.bill.dto.BillSummaryDTO;
+import com.exam.school_management.bill.dto.PaymentCollectionPayLoad;
+import com.exam.school_management.bill.dto.TuitionPaymentDTO;
 import com.exam.school_management.bill.model.MonthlyBillInfo;
-import com.exam.school_management.bill.repo.MonthlyBillRepo;
 import com.exam.school_management.bill.service.MonthlyBillService;
 import com.exam.school_management.classes.model.ClassInfo;
 import com.exam.school_management.classes.service.ClassServiceImp;
 import com.exam.school_management.collection.model.MonthInfo;
 import com.exam.school_management.enums.Status;
+import com.exam.school_management.others_bill.dto.OtherPaymentDTO;
+import com.exam.school_management.others_bill.model.OthersBillInfo;
+import com.exam.school_management.others_bill.service.OthersBillService;
+import com.exam.school_management.receipt.model.ReceiptInfo;
+import com.exam.school_management.receipt.service.ReceiptService;
 import com.exam.school_management.students.model.StudentInfo;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @RestController
@@ -21,12 +28,16 @@ import java.util.*;
 public class MonthlyBillController {
     private final MonthlyBillService monthlyBillService;
     private final ClassServiceImp classServiceImp;
+    private final OthersBillService othersBillService;
+    private final ReceiptService receiptService;
 
 
-    public MonthlyBillController(MonthlyBillService monthlyBillService, ClassServiceImp classServiceImp) {
+    public MonthlyBillController(MonthlyBillService monthlyBillService, ClassServiceImp classServiceImp, OthersBillService othersBillService, ReceiptService receiptService) {
         this.monthlyBillService = monthlyBillService;
         this.classServiceImp = classServiceImp;
 
+        this.othersBillService = othersBillService;
+        this.receiptService = receiptService;
     }
 
     @PostMapping("/save")
@@ -91,5 +102,8 @@ public class MonthlyBillController {
         List<MonthlyBillInfo> list=monthlyBillService.findUnpaidBillByClassAndRoll(classId,roll,queryYear);
        return list;
     }
+
+
+
 
 }

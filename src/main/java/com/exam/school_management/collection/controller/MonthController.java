@@ -41,17 +41,11 @@ public class MonthController {
             @RequestBody MonthInfo updatedData) {
         return monthService.getMonth(id)
                 .map(existingCategory -> {
-                    // 2. Update the field(s) with the new data from React
+
                     existingCategory.setMonthName(updatedData.getMonthName());
-
-
-                    // 3. Save the updated entity back to the database
                     MonthInfo savedData = monthService.doSave(existingCategory);
-
-                    // 4. Return 200 OK along with the freshly updated object
                     return ResponseEntity.ok(savedData);
                 })
-                // 5. If the ID wasn't found, return a clean 404 Not Found to Axios
                 .orElse(ResponseEntity.notFound().build());
     }
 

@@ -6,8 +6,8 @@ import com.exam.school_management.admission.repo.AdmissionRepo;
 import com.exam.school_management.classes.model.ClassInfo;
 import com.exam.school_management.enums.Status;
 import com.exam.school_management.students.model.StudentInfo;
-import com.exam.school_management.students.repository.StudentRepo;
-import org.springframework.dao.DataIntegrityViolationException;
+
+import com.exam.school_management.students.repo.StudentRepo;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,7 +17,7 @@ import java.util.*;
 @Transactional
 public class AdmissionService {
     private final AdmissionRepo admissionRepo;
-    private final com.exam.school_management.students.repository.StudentRepo studentRepo;
+    private final com.exam.school_management.students.repo.StudentRepo studentRepo;
 
     public AdmissionService(AdmissionRepo admissionRepo, StudentRepo studentRepo) {
         this.admissionRepo = admissionRepo;

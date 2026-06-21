@@ -6,10 +6,7 @@ import com.exam.school_management.bill.repo.MonthlyBillRepo;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @Transactional
@@ -76,5 +73,14 @@ public class MonthlyBillService {
 
     public List<MonthlyBillInfo> findUnpaidBillByClassAndRoll(Long classId, Long roll,String queryYear){
         return monthlyBillRepo.findUnpaidBillsByClassAndRoll(classId,roll,queryYear);
+    }
+
+    public Optional<MonthlyBillInfo> findById(Long id){
+        return monthlyBillRepo.findById(id);
+    }
+
+
+    public List<MonthlyBillInfo> collectMonthlyBill(List<MonthlyBillInfo> list){
+        return monthlyBillRepo.saveAll(list);
     }
 }

@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 public class OthersBillDTO {
     private Long studentId;
     private Long collectionCategoryId;
+    private Long classId;
 
 
 

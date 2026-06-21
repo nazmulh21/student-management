@@ -1,9 +1,8 @@
-package com.exam.school_management.students.repository;
+package com.exam.school_management.students.repo;
 
 import com.exam.school_management.students.model.StudentInfo;
 import org.springframework.data.jpa.repository.EntityGraph; // <-- ADD THIS IMPORT
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
