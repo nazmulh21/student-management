@@ -16,6 +16,9 @@ import java.util.Date;
 @Entity
 public class ReceiptInfo {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     private String receiptNo;
 
     private BigDecimal paidAmount;

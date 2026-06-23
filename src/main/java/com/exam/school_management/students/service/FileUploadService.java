@@ -19,6 +19,10 @@ public class FileUploadService {
             Files.createDirectories(uploadPath);
         }
 
+        if (multipartFile.isEmpty() || multipartFile.getSize() == 0) {
+            throw new IllegalArgumentException("Cannot upload an empty or invalid file.");
+        }
+
         // Memory-safe block to stream binary image data to your disk destination
         try (InputStream inputStream = multipartFile.getInputStream()) {
             Path filePath = uploadPath.resolve(fileName);
@@ -27,4 +31,6 @@ public class FileUploadService {
             throw new IOException("Could not save file " + fileName, exception);
         }
     }
+
+
 }

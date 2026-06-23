@@ -256,13 +256,13 @@ public class StudentService {
         }
     }
 
-  public List<StudentInfo> getAllStudentByAcademicYear(Long academicYear){
+    public List<StudentInfo> getAllStudentByAcademicYear(Long academicYear){
         return studentRepo.findAllByAcademicYearAndScholarshipInfoScholarshipIdIsNullAndIsActiveTrue(academicYear);
-}
+    }
 
 
-public List<StudentInfo> getAllActiveStudent(Long academicYear){
+    public List<StudentInfo> getAllActiveStudent(Long academicYear){
         return studentRepo.findAllByAcademicYearAndIsActiveTrue(academicYear);
-}
+    }
 
 }

@@ -43,6 +43,13 @@ public class AllBillCollectionController {
             SimpleDateFormat datePrefixFormat = new SimpleDateFormat("ddMMyy");
             String fullDatePrefix = datePrefixFormat.format(new Date());
 
+            // CRITICAL FIX: পুরো ট্রানজেকশন বা সেশনের জন্য মাত্র একবার রসিদ নাম্বার জেনারেট করুন
+            String nextSerial = receiptService.getNextSerial();
+            String sharedReceiptNo = "T" + fullDatePrefix + nextSerial;
+
+            // একটি মাস্টার লিস্ট তৈরি করুন যা সব সেভ হওয়া রসিদ ধরে রাখবে
+            List<ReceiptInfo> savedReceipts = new ArrayList<>();
+
             // 1. Process Tuition Breakdown
             if (payload.getTuitionBreakdown() != null) {
                 List<MonthlyBillInfo> billsToUpdate = new ArrayList<>();
@@ -61,7 +68,8 @@ public class AllBillCollectionController {
                         MonthlyBillInfo updatedBill = calculateAndSetTuitionDetails(existingBill, tuition);
                         billsToUpdate.add(updatedBill);
 
-                        ReceiptInfo receipt = createReceipt(fullDatePrefix, "TUITION", tuition.getAmountPaid(), tuition.getDiscount(), existingBill, null);
+                        // এখানে sharedReceiptNo পাস করা হচ্ছে
+                        ReceiptInfo receipt = createReceipt(sharedReceiptNo, "TUITION", tuition.getAmountPaid(), tuition.getDiscount(), existingBill, null);
                         list.add(receipt);
 
                     } else {
@@ -71,7 +79,9 @@ public class AllBillCollectionController {
 
                 if (!billsToUpdate.isEmpty()) {
                     monthlyBillService.collectMonthlyBill(billsToUpdate);
-                    receiptService.save(list);
+
+                    List<ReceiptInfo> savedTuitionReceipts = receiptService.save(list);
+                    savedReceipts.addAll(savedTuitionReceipts);
                     System.out.println("Tuition Bills Updated: " + billsToUpdate);
                 }
             }
@@ -79,6 +89,7 @@ public class AllBillCollectionController {
             // 2. Process Others Breakdown
             if (payload.getOthersBreakdown() != null) {
                 List<OthersBillInfo> list = new ArrayList<>();
+                List<ReceiptInfo> receipts = new ArrayList<>();
 
                 for (OtherPaymentDTO dto : payload.getOthersBreakdown()) {
                     if (dto.getBillId() == null) {
@@ -93,6 +104,11 @@ public class AllBillCollectionController {
 
                         OthersBillInfo updatedBill = calculateAndSetOtherBillDetails(existingBill, dto);
                         list.add(updatedBill);
+
+                        // এখানেও একই sharedReceiptNo পাস করা হচ্ছে
+                        ReceiptInfo receipt = createReceipt(sharedReceiptNo, "Others", dto.getAmountPaid(), dto.getDiscount(), null, existingBill);
+                        receipts.add(receipt);
+
                     } else {
                         System.out.println("Warning: Others Bill ID " + dto.getBillId() + " not found in database.");
                     }
@@ -100,18 +116,19 @@ public class AllBillCollectionController {
 
                 if (!list.isEmpty()) {
                     othersBillService.othersBillCollect(list);
-                    System.out.println("Others Bills Updated: " + list);
+
+                    List<ReceiptInfo> savedOtherReceipts = receiptService.save(receipts);
+                    savedReceipts.addAll(savedOtherReceipts);
                 }
             }
-
-            return ResponseEntity.ok().body("Payment processed and database updated successfully!");
+                System.out.println("after submit receiptInfo::"+savedReceipts);
+            return ResponseEntity.ok().body(savedReceipts);
 
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.internalServerError().body("Failed to process payment: " + e.getMessage());
         }
     }
-
     /**
      * Corrected core logic: Separated Paid and Discount calculations.
      */
@@ -162,19 +179,18 @@ public class AllBillCollectionController {
 
 
     private ReceiptInfo createReceipt(
-            String receiptNoPrefix,
+            String finalizedReceiptNo,
             String billType,
             BigDecimal amountPaid,
             BigDecimal discount,
             MonthlyBillInfo tuitionBill,
             OthersBillInfo othersBill
-            ) {
+    ) {
 
         ReceiptInfo receiptInfo = new ReceiptInfo();
 
-        // 1. Generate the sequential receipt ID (e.g., 2106261)
-        String nextSerial = receiptService.getNextSerial();
-        receiptInfo.setReceiptNo(receiptNoPrefix + nextSerial);
+        // সরাসরি উপর থেকে জেনারেট হয়ে আসা কমন রসিদ নম্বরটি সেট করা হলো
+        receiptInfo.setReceiptNo(finalizedReceiptNo);
 
         // 2. Set common billing details
         receiptInfo.setBillType(billType);
@@ -185,7 +201,16 @@ public class AllBillCollectionController {
         // 3. Link to respective bill mappings dynamically
         receiptInfo.setMonthlyBillInfo(tuitionBill);
         receiptInfo.setOthersBillInfo(othersBill);
-        receiptInfo.setStudentInfo(new StudentInfo(tuitionBill.getStudentInfo().getId()));
+
+        // SAFE: Check if tuitionBill is not null, and ensure student info exists
+        if (tuitionBill != null && tuitionBill.getStudentInfo() != null) {
+            receiptInfo.setStudentInfo(new StudentInfo(tuitionBill.getStudentInfo().getId()));
+        }
+
+        // FIXED: Check if othersBill is not null, and ensure student info exists before getting ID
+        if (othersBill != null && othersBill.getStudentInfo() != null) {
+            receiptInfo.setStudentInfo(new StudentInfo(othersBill.getStudentInfo().getId()));
+        }
 
         return receiptInfo;
     }
