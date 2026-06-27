@@ -51,4 +51,26 @@ public interface OthersBillRepo extends JpaRepository<OthersBillInfo, Long> {
             Long academicYear
     );
 
+
+
+    @Query("SELECT SUM(COALESCE(o.othersBill, 0)), " +
+            "SUM(COALESCE(o.paidBill, 0)), " +
+            "SUM(COALESCE(o.discount, 0)) " +
+            "FROM OthersBillInfo o JOIN o.studentInfo s " +
+            "WHERE s.classInfo.id = :classId " +
+            "AND s.academicYear = :year")
+    List<Object[]> getOthersBillSummaryByClass(
+            @Param("classId") Long classId,
+            @Param("year") Long year // 💡 Long করা হলো
+    );
+
+    // ২. অন্যান্য বিলের বিস্তারিত বকেয়া তালিকা
+    @Query("SELECT o FROM OthersBillInfo o JOIN o.studentInfo s " +
+            "WHERE s.classInfo.id = :classId " +
+            "AND s.academicYear = :year " +
+            "AND (COALESCE(o.othersBill, 0) > (COALESCE(o.paidBill, 0) + COALESCE(o.discount, 0)))")
+    List<OthersBillInfo> getDetailedOthersDueListByClass(
+            @Param("classId") Long classId,
+            @Param("year") Long year // 💡 Long করা হলো
+    );
 }

@@ -28,6 +28,7 @@ import java.text.SimpleDateFormat;
 import java.time.YearMonth;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/student")
@@ -242,5 +243,32 @@ public class StudentController {
         Long year = (long) YearMonth.now().getYear();
         List<StudentInfo> list=studentService.getAllActiveStudent(year);
         return ResponseEntity.ok(list);
+    }
+
+
+    @GetMapping("/verify/{stuUniqueId}")
+    public ResponseEntity<?> verifyStudent(@PathVariable String stuUniqueId) {
+        Long year = (long) java.time.YearMonth.now().getYear();
+
+        // 1. Try finding them for the current year
+        StudentInfo stu = studentService.findByStuUniqueIdAndAcademicYear(stuUniqueId, year);
+
+        if (stu == null) {
+            // 2. Check if they exist at all in any other year
+            Optional<StudentInfo> olderStu = studentService.findByUniqueId(stuUniqueId);
+
+            if (olderStu != null) {
+                return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body("Student did not renew registration for the current year (" + year + "). last seen in: " + olderStu.get().getAcademicYear());
+            }
+
+            // 3. Fallback if they completely don't exist
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body("Active student record not found for the current academic year (" + year + ").");
+        }
+
+        return ResponseEntity.ok(stu);
     }
 }

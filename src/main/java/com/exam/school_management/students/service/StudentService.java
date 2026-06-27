@@ -265,4 +265,8 @@ public class StudentService {
         return studentRepo.findAllByAcademicYearAndIsActiveTrue(academicYear);
     }
 
+    public Optional<StudentInfo> findByUniqueId(String stuUnique){
+       return studentRepo.findByStuUniqueId(stuUnique);
+    }
+
 }

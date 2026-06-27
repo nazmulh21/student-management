@@ -26,9 +26,10 @@ public interface ReceiptRepo extends JpaRepository<ReceiptInfo,Long> {
     List<ReceiptSummaryDTO> findReceiptSummary(@Param("academicYear") Long academicYear);
 
 
-    List<ReceiptInfo> findByStudentInfo_StuUniqueIdOrderByStudentInfo_AcademicYearDesc(String uniqueId);
+    List<ReceiptInfo> findAllByStudentInfo_stuUniqueIdOrderByPaymentDateDesc(String uniqueId);
 
-        List<ReceiptInfo> findAllByReceiptNo(String receiptNo);
+    @Query("SELECT r FROM ReceiptInfo r WHERE r.receiptNo LIKE CONCAT(:receiptNo, '%') ORDER BY r.id DESC")
+    List<ReceiptInfo> findAllByReceiptNoLikeFields(@Param("receiptNo") String receiptNo);
 }
 
 

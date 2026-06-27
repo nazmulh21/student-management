@@ -31,11 +31,11 @@ public class ReceiptService {
     }
 
     public List<ReceiptInfo> getListByAcademicYearAndUniqueId(String uniqueId){
-        return receiptRepo.findByStudentInfo_StuUniqueIdOrderByStudentInfo_AcademicYearDesc(uniqueId);
+        return receiptRepo.findAllByStudentInfo_stuUniqueIdOrderByPaymentDateDesc(uniqueId);
     }
 
     public List<ReceiptInfo> getDetailsByReceipt(String receiptNo){
-        return receiptRepo.findAllByReceiptNo(receiptNo);
+        return receiptRepo.findAllByReceiptNoLikeFields(receiptNo);
     }
 
 }

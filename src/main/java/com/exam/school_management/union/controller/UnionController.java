@@ -20,19 +20,15 @@ public class UnionController {
 
     @PostMapping("/save")
     public UnionInfo doSave(@RequestBody UnionDTO dto){
-        System.out.println("Union:"+dto.getUnionName());
         UnionInfo info=new UnionInfo();
         info.setThanaInfo(new ThanaInfo(dto.getThanaCode()));
         info.setUnionName(dto.getUnionName());
-        System.out.println("dataaa"+info);
         return unionService.doSave(info);
     }
 
     @GetMapping("/list/{thanaCode}")
     public List<UnionProjection> getAllUnion(@PathVariable Long thanaCode){
-        System.out.println("Uthana Code::"+thanaCode);
         List<UnionProjection>list=unionService.getUnionList(thanaCode);
-        System.out.println("Union Dattaaaa::"+list);
         return list;
     }
 }
