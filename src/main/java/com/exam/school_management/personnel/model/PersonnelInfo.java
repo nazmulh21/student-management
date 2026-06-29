@@ -4,11 +4,15 @@ import com.exam.school_management.blood_group.model.BloodInfo;
 import com.exam.school_management.designation.model.DesignationInfo;
 import com.exam.school_management.district.model.DistrictInfo;
 import com.exam.school_management.gender.model.GenderInfo;
+import com.exam.school_management.job_status.model.JobStatusInfo;
 import com.exam.school_management.subjects.model.SubjectInfo;
 import com.exam.school_management.thana.model.ThanaInfo;
 import com.exam.school_management.union.model.UnionInfo;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Data;
+import tools.jackson.databind.annotation.JsonSerialize;
+import tools.jackson.databind.ext.javatime.ser.LocalDateSerializer;
 
 import java.time.LocalDate;
 
@@ -47,42 +51,51 @@ public class PersonnelInfo {
     @Column(name = "mother")
     private String mother;
 
+    @JsonSerialize(using = LocalDateSerializer.class)
+    @JsonFormat(pattern = "dd-MM-yyyy")
     @Column(name = "join_date")
     private LocalDate joinDate;
 
+    @JsonSerialize(using = LocalDateSerializer.class)
+    @JsonFormat(pattern = "dd-MM-yyyy")
     @Column(name = "dob")
     private LocalDate dob;
 
-    @ManyToOne(fetch = FetchType.EAGER) // <-- Changed to EAGER
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "blood_id")
     private BloodInfo bloodInfo;
 
-    @ManyToOne(fetch = FetchType.EAGER) // <-- Changed to EAGER
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "gender_id")
     private GenderInfo genderInfo;
 
-    @ManyToOne(fetch = FetchType.EAGER) // <-- Changed to EAGER
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "designation_id")
     private DesignationInfo designationInfo;
 
-    @ManyToOne(fetch = FetchType.EAGER) // <-- Changed to EAGER
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "subject_id")
     private SubjectInfo subjectInfo;
 
-    @ManyToOne(fetch = FetchType.EAGER) // <-- Changed to EAGER
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "district_id")
     private DistrictInfo districtInfo;
 
-    @ManyToOne(fetch = FetchType.EAGER) // <-- Changed to EAGER
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "thana_id")
     private ThanaInfo thanaInfo;
 
-    @ManyToOne(fetch = FetchType.EAGER) // <-- Changed to EAGER
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "union_id")
     private UnionInfo unionInfo;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "job_status_id")
+    private JobStatusInfo jobStatusInfo;
+
     @Column(name = "village")
     private String village;
+
 
     public PersonnelInfo() {
     }

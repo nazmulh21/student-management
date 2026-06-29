@@ -32,5 +32,6 @@ public class PersonnelDTO {
     private String districtId;
     private String thanaId;
     private String unionId;
+    private String jobStatusId;
     private String village;
 }
