@@ -47,7 +47,6 @@ public class AdmissionService {
         List<StudentInfo> studentsToUpdate = new ArrayList<>();
 
         for (AdmissionPermitDTO dto : dtos) {
-            System.out.println("Processing admission processing for Student ID: " + dto.getStuId());
 
             if (dto.getStuId() == null) {
                 continue; // Skip invalid entries safely

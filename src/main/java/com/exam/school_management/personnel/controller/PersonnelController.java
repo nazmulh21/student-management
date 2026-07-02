@@ -28,7 +28,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/personnel")
-@CrossOrigin(origins = "*") // রিঅ্যাক্ট থেকে কল করার জন্য (প্রয়োজন হলে পোর্ট নির্দিষ্ট করে দিতে পারেন)
 public class PersonnelController {
 
     private final PersonnelService personnelService;
@@ -105,7 +104,7 @@ public class PersonnelController {
 
     @GetMapping("/list")
     public ResponseEntity<List<PersonnelInfo>> getList(){
-        return ResponseEntity.ok(personnelService.getList());
+        return ResponseEntity.ok(personnelService.getPersonnelList());
     }
 
 
@@ -183,4 +182,6 @@ public class PersonnelController {
             return ResponseEntity.notFound().build();
         }
     }
+
+
 }

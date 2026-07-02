@@ -92,4 +92,8 @@ public Optional<PersonnelInfo> findById(Long id){
             System.err.println("Error during file/folder cleanup for student " + index + ": " + e.getMessage());
         }
     }
+
+    public List<PersonnelInfo> getPersonnelList(){
+        return personnelRepo.findAllPersonnelOrderedByDesignation();
+    }
 }
