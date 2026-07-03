@@ -8,14 +8,14 @@ import org.springframework.stereotype.Component;
 import java.security.Key;
 import java.util.Date;
 
-@Component // 👈 এই অ্যানোটেশনের কারণেই স্প্রিং বুট এটিকে ফিল্টারে ইনজেক্ট করতে পারবে
+@Component
 public class JwtUtil {
 
     // টোকেন এনক্রিপ্ট করার জন্য একটি সিক্রেট কি (Key)
     private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-    
+
     // টোকেন কতক্ষণ সচল থাকবে (২৪ ঘণ্টা = ৮৬৪০০০০০ মিলিমেকেন্ড)
-    private final long jwtExpirationMs = 86400000; 
+    private final long jwtExpirationMs = 86400000;
 
     // ১. ইউজারনেম দিয়ে টোকেন তৈরি করার মেথড
     public String generateToken(String username) {
@@ -27,7 +27,7 @@ public class JwtUtil {
                 .compact();
     }
 
-    // ২. টোকেন থেকে ইউজারনেম বের করার মেথড
+
     public String getUsernameFromToken(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key)

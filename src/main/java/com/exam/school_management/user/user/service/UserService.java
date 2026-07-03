@@ -7,25 +7,39 @@ import com.exam.school_management.user.user.model.UserInfo;
 import com.exam.school_management.user.user.repo.UserRepository;
 import com.exam.school_management.user.user_type.model.UserTypeInfo;
 import com.exam.school_management.user.user_type.repo.UserTypeRepo;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final UserTypeRepo userTypeRepository;
     private final PersonnelRepo personnelRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JavaMailSender mailSender;
 
-    public UserService(UserRepository userRepository, UserTypeRepo userTypeRepository, PersonnelRepo personnelRepository, PasswordEncoder passwordEncoder) {
+    // 👈 কনস্ট্রাক্টরের PasswordEncoder এর আগে @Lazy যুক্ত করুন
+    public UserService(UserRepository userRepository,
+                       UserTypeRepo userTypeRepository,
+                       PersonnelRepo personnelRepository,
+                       @Lazy PasswordEncoder passwordEncoder, JavaMailSender mailSender) {
         this.userRepository = userRepository;
         this.userTypeRepository = userTypeRepository;
         this.personnelRepository = personnelRepository;
         this.passwordEncoder = passwordEncoder;
+        this.mailSender = mailSender;
     }
 
 
@@ -69,7 +83,75 @@ public class UserService {
         return "User registered successfully!";
     }
 
-    public Optional<UserInfo>findByUserName(String userName){
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        // ডাটাবেজ থেকে ইউজার খুঁজে বের করা
+        UserInfo userInfo = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+
+        // স্প্রিং সিকিউরিটির বিল্ট-ইন User অবজেক্টে কনভার্ট করে রিটার্ন করা হচ্ছে
+        return org.springframework.security.core.userdetails.User.builder()
+                .username(userInfo.getUsername())
+                .password(userInfo.getPassword())
+                .disabled(!userInfo.isActive()) // ইউজার একটিভ না থাকলে এক্সেস ব্লক করবে
+                .authorities(userInfo.getUserTypeInfo() != null ? userInfo.getUserTypeInfo().getUserType() : "ROLE_USER")
+                // 👆 আপনার মডেলে যদি রোল থাকে, সেটি এখানে পাস হবে (অথবা ডিফল্ট ROLE_USER)
+                .build();
+
+
+    }
+
+    public Optional<UserInfo> findByUserName(String userName) {
         return userRepository.findByUsername(userName);
     }
+
+    public void save(UserInfo user){
+        userRepository.save(user);
+    }
+
+    public void sendResetEmail(String email, String resetLink) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(email);
+        message.setSubject("Password Reset Request - KGHS School Management");
+        message.setText("To reset your password, click here: " + resetLink);
+        mailSender.send(message);
+    }
+
+    public void processForgotPassword(String index) {
+        // ১. ইনডেক্স নম্বর দিয়ে ইউজার খুঁজুন
+        UserInfo user = userRepository.findByPersonnelInfoIndex(index)
+                .orElseThrow(() -> new RuntimeException("User not found with this Index Number"));
+
+        // ২. একটি ইউনিক রিসেট টোকেন তৈরি করুন
+        String token = UUID.randomUUID().toString();
+        user.setResetToken(token); // UserInfo মডেলে resetToken নামে একটি String কলাম থাকতে হবে
+        user.setResetTokenExpiry(LocalDateTime.now().plusMinutes(40));
+        userRepository.save(user);
+
+        // ৩. ইউজারের ইমেইলে লিঙ্ক পাঠান (যেহেতু ইউজারের ইমেইল ডাটাবেজেই আছে)
+        String resetLink = "http://localhost:3000/reset-password?token=" + token;
+        sendResetEmail(user.getEmail(), resetLink);
+    }
+
+    public Optional<UserInfo> findByResetToken(String token) {
+        return userRepository.findByResetToken(token);
+    }
+
+    // ২. পাসওয়ার্ড আপডেট করা
+    @Transactional
+    public void updatePassword(UserInfo user, String newPassword) {
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setResetToken(null); // পাসওয়ার্ড চেঞ্জ হলে টোকেন মুছে ফেলুন
+        userRepository.save(user);
+    }
+
+
+    public boolean isTokenValid(UserInfo user) {
+        if (user.getResetToken() == null || user.getResetTokenExpiry() == null) {
+            return false;
+        }
+        // যদি বর্তমান সময় এক্সপায়ারি টাইমের চেয়ে ছোট হয়, তবেই টোকেন বৈধ
+        return LocalDateTime.now().isBefore(user.getResetTokenExpiry());
+    }
+
 }
