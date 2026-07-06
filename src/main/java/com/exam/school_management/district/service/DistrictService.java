@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -23,5 +24,12 @@ public class DistrictService {
     public List<DistrictInfo> getList(){
         List<DistrictInfo> list=districtRepo.findAll();
         return list;
+    }
+
+    public Optional<DistrictInfo>findById(Long districtCode){
+        return districtRepo.findById(districtCode);
+    }
+    public void delete(Long districtCode){
+        districtRepo.deleteById(districtCode);
     }
 }

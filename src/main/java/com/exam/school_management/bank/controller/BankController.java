@@ -19,9 +19,6 @@ public class BankController {
         this.bankService = bankService;
     }
 
-
-
-
     @GetMapping("/students")
     public List<BankInfo> getList(){
 

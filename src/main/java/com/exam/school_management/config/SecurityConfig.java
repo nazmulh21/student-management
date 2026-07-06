@@ -39,7 +39,7 @@ public class SecurityConfig {
 
                         // ২. ছবি বা অন্য পাবলিক স্ট্যাটিক ফাইল
                         .requestMatchers("/student-photos/**", "/verify-student/**").permitAll()
-                        .requestMatchers("/role/**").permitAll()
+                        .requestMatchers("/role/**","/leave-type/**","/api/leave-requests/**","/leave-type/**","/student/all-active/**").permitAll()
 
                         // ৩. অন্যান্য সব রিকোয়েস্ট অথেন্টিকেটেড হতে হবে (এর ভেতরেই '/api/auth/me' থাকবে)
                         .anyRequest().authenticated()
