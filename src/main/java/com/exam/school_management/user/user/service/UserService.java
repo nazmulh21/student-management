@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -152,6 +153,10 @@ public class UserService implements UserDetailsService {
         }
         // যদি বর্তমান সময় এক্সপায়ারি টাইমের চেয়ে ছোট হয়, তবেই টোকেন বৈধ
         return LocalDateTime.now().isBefore(user.getResetTokenExpiry());
+    }
+
+    public List<UserInfo> getUserList(){
+        return userRepository.findAll();
     }
 
 }

@@ -6,16 +6,21 @@ import com.exam.school_management.user.user.dto.UserRegistrationDto;
 import com.exam.school_management.user.user.model.UserInfo;
 import com.exam.school_management.user.user.service.UserService;
 import jakarta.servlet.http.Cookie; // 👈 কুকির জন্য ইমপোর্ট
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse; // 👈 রেসপন্স হ্যান্ডেল করার জন্য ইমপোর্ট
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -59,28 +64,29 @@ public class UserController {
         String lastLoginToShow = "First Time Login";
         if (user.getLastLoginTime() != null) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
-            lastLoginToShow = user.getLastLoginTime().format(formatter); // 👈 এটিই আপনার সেই গত পরশুর টাইম!
+            lastLoginToShow = user.getLastLoginTime().format(formatter);
         }
 
         user.setLastLoginTime(LocalDateTime.now());
         userService.save(user);
 
-        // JWT টোকেন ও কুকি সেট করার কোড (আপনার আগের কোড অনুযায়ী ঠিক থাকবে)
+        // JWT টোকেন তৈরি করা
         String jwtToken = jwtUtil.generateToken(user.getUsername());
+
+        // কুকি সেট করা
         Cookie cookie = new Cookie("accessToken", jwtToken);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(7 * 24 * 60 * 60);
+        cookie.setHttpOnly(true);       // জাভাস্ক্রিপ্ট থেকে কুকি রিড করা যাবে না (নিরাপদ)
+        cookie.setPath("/");            // পুরো অ্যাপের জন্য ভ্যালিড
+        cookie.setMaxAge(8 * 60 * 60);         // 🕒 ৮ ঘন্টার জন্য
         response.addCookie(cookie);
 
+        // রেসপন্স বডি তৈরি করা
         Map<String, Object> responseBody = new HashMap<>();
         responseBody.put("message", "Login successful!");
         responseBody.put("username", user.getUsername());
         responseBody.put("fullName", user.getPersonnelInfo() != null ? user.getPersonnelInfo().getName() : "Name Not Found");
         responseBody.put("email", user.getEmail());
         responseBody.put("userType", user.getUserTypeInfo() != null ? user.getUserTypeInfo().getUserType() : "General");
-
-        // 🕒 ৩. রেসপন্সে আমরা পুরনো (গত পরশুর) টাইমটি পাঠাচ্ছি
         responseBody.put("lastLogin", lastLoginToShow);
 
         return ResponseEntity.ok(responseBody);
@@ -88,20 +94,23 @@ public class UserController {
 
     // 👈 ৪. নতুন লগআউট এন্ডপয়েন্ট (কুকি ডিলিট করার জন্য)
     @PostMapping("/logout")
-    public ResponseEntity<?> logoutUser(HttpServletResponse response) {
-        // একই নামের কুকি তৈরি করে MaxAge শূন্য (0) করে দিতে হবে
+    public ResponseEntity<?> logoutUser(HttpServletRequest request, HttpServletResponse response) {
+        // লগআউটের সময় কুকিটি মুছে ফেলার জন্য নতুন কুকি তৈরি করে MaxAge 0 করা হচ্ছে
         Cookie cookie = new Cookie("accessToken", null);
         cookie.setHttpOnly(true);
-        cookie.setSecure(false);
-        cookie.setPath("/");
-        cookie.setMaxAge(0); // ০ করার সাথে সাথে ব্রাউজার কুকিটি মুছে ফেলবে
-
+        cookie.setSecure(false); // লোকালহোস্টের জন্য false (প্রোডাকশনে true করবেন)
+        cookie.setPath("/");     // পুরো অ্যাপ্লিকেশনের জন্য ভ্যালিড
+        cookie.setMaxAge(0);     // MaxAge 0 সেট করলে ব্রাউজার কুকিটি সাথে সাথে মুছে ফেলে
         response.addCookie(cookie);
+
+        SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
+        logoutHandler.logout(request, response, SecurityContextHolder.getContext().getAuthentication());
 
         Map<String, String> responseBody = new HashMap<>();
         responseBody.put("message", "Logout successful!");
         return ResponseEntity.ok(responseBody);
     }
+
 
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
@@ -143,5 +152,17 @@ public class UserController {
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("ইনভ্যালিড টোকেন!");
         }
+    }
+
+    @GetMapping(value="/user/list",produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getUserList(){
+        return ResponseEntity.ok(userService.getUserList());
+    }
+
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getMe() {
+        // এই এন্ডপয়েন্টটি ফিল্টার হয়েই আসবে, তাই কুকি না থাকলে ফিল্টার নিজেই 401 পাঠাবে।
+        return ResponseEntity.ok("Valid");
     }
 }

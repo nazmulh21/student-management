@@ -5,6 +5,7 @@ import com.exam.school_management.others_bill.service.DueReportService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,10 +19,11 @@ public class DueReportController {
         this.dueReportService = dueReportService;
     }
 
-    @GetMapping("/complete")
+    @GetMapping(value = "/complete/{classId}/{academicYear}",produces = MediaType.APPLICATION_JSON_VALUE)
+    //@PreAuthorize("isAuthenticated()")
     public ResponseEntity<CompleteClassDueReportResponse> getCompleteReport(
-            @RequestParam Long classId,          // 💡 String className এর বদলে এখন Long classId হবে
-            @RequestParam Long academicYear) {   // 💡 এটি সরাসরি Long হিসেবেই পাস হবে
+            @PathVariable Long classId,          // 💡 String className এর বদলে এখন Long classId হবে
+            @PathVariable Long academicYear) {   // 💡 এটি সরাসরি Long হিসেবেই পাস হবে
 
         // সার্ভিস লেয়ার এখন সরাসরি দুটি Long ভ্যালু রিসিভ করবে
         CompleteClassDueReportResponse report = dueReportService.getCompleteClassReport(classId, academicYear);

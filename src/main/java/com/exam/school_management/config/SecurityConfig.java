@@ -3,6 +3,7 @@ package com.exam.school_management.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -12,55 +13,59 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-
     private final JwtFilter jwtFilter;
-
-    @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().requestMatchers("/student-photos/**");
-    }
+    private final CacheControlFilter cacheControlFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // ১. পারফেক্ট CORS কনফিগারেশন (কুকি সাপোর্টের জন্য)
-                .cors(cors -> cors.configurationSource(request -> {
-                    CorsConfiguration config = new CorsConfiguration();
-                    config.setAllowedOrigins(Arrays.asList("http://localhost:3000")); // আপনার ফ্রন্টএন্ড ইউআরএল
-                    config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                    config.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type", "Cookie")); // 👈 Cookie হেডার যুক্ত করা হয়েছে
-                    config.setExposedHeaders(Arrays.asList("Set-Cookie"));
-                    config.setAllowCredentials(true); // 👈 কুকি ট্রান্সফারের জন্য এটি মাস্ট!
-                    return config;
-                }))
-                // ২. CSRF ডিজেবল
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
-
-                // ৩. সেশন ম্যানেজমেন্ট STATELESS করা (JWT এর জন্য এটি বাধ্যতামূলক)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                // ৪. ইউজার অথরাইজেশন রুলস
                 .authorizeHttpRequests(auth -> auth
-                        // আপনার বর্তমান পাবলিক এন্ডপয়েন্টগুলো
-                        .requestMatchers("/api/auth/**", "/user-type/list", "/personnel/list").permitAll()
+                        // ১. শুধুমাত্র লগইন ও রেজিস্ট্রেশন এন্ডপয়েন্ট পাবলিক রাখুন
+                        .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/forgot-password", "/api/auth/reset-password-confirm","/api/auth/logout").permitAll()
 
-                        // 👈 নতুন পাসওয়ার্ড রিসেট এন্ডপয়েন্টগুলোকে পাবলিক করুন:
-                        .requestMatchers("/api/forgot-password", "/api/reset-password-confirm").permitAll()
+                        // ২. ছবি বা অন্য পাবলিক স্ট্যাটিক ফাইল
+                        .requestMatchers("/student-photos/**", "/verify-student/**").permitAll()
+                        .requestMatchers("/role/**").permitAll()
 
-                        // বাকি সব রিকোয়েস্টের জন্য লগইন বা টোকেন বাধ্যতামূলক
+                        // ৩. অন্যান্য সব রিকোয়েস্ট অথেন্টিকেটেড হতে হবে (এর ভেতরেই '/api/auth/me' থাকবে)
                         .anyRequest().authenticated()
-                );
-
-        // ৫. ইউজারনেম-পাসওয়ার্ড ফিল্টারের আগে আমাদের JWT ফিল্টার রান হবে
-        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                )
+                // ফিল্টার চেইন
+                .addFilterBefore(cacheControlFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of("http://localhost:3000"));
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+
+        // হেডারগুলো সঠিকভাবে লিস্ট করুন
+        config.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type", "Accept", "X-Requested-With", "Cookie"));
+
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 
     @Bean
