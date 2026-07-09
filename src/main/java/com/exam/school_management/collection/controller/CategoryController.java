@@ -30,7 +30,6 @@ public class CategoryController {
 
     @GetMapping("/{id}")
     public Optional<CollectionCategoryInfo> getCollectionCategory(@PathVariable Long id){
-        System.out.println("C id::"+id);
         return categoryService.findById(id);
     }
 
@@ -58,6 +57,11 @@ public class CategoryController {
     public ResponseEntity<?> doDelete(@PathVariable Long id) {
         categoryService.doDelete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/get-exam")
+    public List<CollectionCategoryInfo> getExamList(){
+        return categoryService.getExamTypeList();
     }
 
 }

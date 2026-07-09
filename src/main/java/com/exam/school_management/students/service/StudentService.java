@@ -269,4 +269,12 @@ public class StudentService {
        return studentRepo.findByStuUniqueId(stuUnique);
     }
 
+    public List<StudentInfo> getAllStudentByClassId(Long classId){
+        return studentRepo.findAllByClassInfo_Id(classId);
+    }
+
+    public Optional<StudentInfo> findById(Long id){
+        return studentRepo.findById(id);
+    }
+
 }

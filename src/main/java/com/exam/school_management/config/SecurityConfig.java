@@ -33,6 +33,9 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                /*.securityContext((securityContext) -> securityContext
+                        .requireExplicitSave(false)
+                )*/
                 .authorizeHttpRequests(auth -> auth
                         // ১. শুধুমাত্র লগইন ও রেজিস্ট্রেশন এন্ডপয়েন্ট পাবলিক রাখুন
                         .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/forgot-password", "/api/auth/reset-password-confirm","/api/auth/logout").permitAll()
@@ -40,8 +43,11 @@ public class SecurityConfig {
                         // ২. ছবি বা অন্য পাবলিক স্ট্যাটিক ফাইল
                         .requestMatchers("/student-photos/**", "/verify-student/**").permitAll()
                         .requestMatchers("/role/**","/leave-type/**","/api/leave-requests/**","/leave-type/**","/student/all-active/**").permitAll()
+                        .requestMatchers("/class/list", "/subject/list").authenticated()
 
                         // ৩. অন্যান্য সব রিকোয়েস্ট অথেন্টিকেটেড হতে হবে (এর ভেতরেই '/api/auth/me' থাকবে)
+                        .requestMatchers("/api/auth/me").authenticated()
+                        .requestMatchers("/collection-category/**","/academic-result/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 // ফিল্টার চেইন
@@ -54,13 +60,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
+        // শুধু আপনার ফ্রন্টএন্ড ডোমেইন দিন
         config.setAllowedOrigins(List.of("http://localhost:3000"));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-
-        // হেডারগুলো সঠিকভাবে লিস্ট করুন
-        config.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type", "Accept", "X-Requested-With", "Cookie"));
-
-        config.setAllowCredentials(true);
+        config.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type", "Cookie", "X-Requested-With"));
+        config.setAllowCredentials(true); // এটি 'true' থাকতেই হবে
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

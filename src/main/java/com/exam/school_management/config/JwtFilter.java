@@ -3,6 +3,7 @@ package com.exam.school_management.config;
 import com.exam.school_management.user.user.service.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -32,25 +33,33 @@ public class JwtFilter extends OncePerRequestFilter {
                 path.startsWith("/api/auth/logout");
     }
 
+    // JwtFilter.java
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        // কুকি থেকে টোকেন নিন
-        String jwt = jwtUtil.getJwtFromCookies(request);
+        String jwt = null;
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("accessToken".equals(cookie.getName())) {
+                    jwt = cookie.getValue();
+                }
+            }
+        }
 
         if (jwt != null && jwtUtil.validateToken(jwt)) {
-            String username = jwtUtil.getUsernameFromToken(jwt);
-
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            try {
+                String username = jwtUtil.getUsernameFromToken(jwt);
                 UserDetails userDetails = this.userService.loadUserByUsername(username);
-
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+            } catch (Exception e) {
+                SecurityContextHolder.clearContext(); // এরর হলে ক্লিয়ার করে দিন
             }
+        } else {
+            SecurityContextHolder.clearContext(); // কুকি না থাকলে বা ইনভ্যালিড হলে ক্লিয়ার
         }
 
         filterChain.doFilter(request, response);

@@ -11,7 +11,9 @@ import jakarta.servlet.http.HttpServletResponse; // 👈 রেসপন্স �
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -52,56 +55,58 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody UserLoginDto loginDto, HttpServletResponse response) {
         Optional<UserInfo> userOptional = userService.findByUserName(loginDto.getUsername());
-        if (userOptional.isEmpty()) {
+        LocalDateTime lastLoginTimeFromDb;
+        if (userOptional.isEmpty() || !passwordEncoder.matches(loginDto.getPassword(), userOptional.get().getPassword())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password!");
         }
+
         UserInfo user = userOptional.get();
 
-        if (!passwordEncoder.matches(loginDto.getPassword(), user.getPassword())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password!");
-        }
-
-        String lastLoginToShow = "First Time Login";
-        if (user.getLastLoginTime() != null) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
-            lastLoginToShow = user.getLastLoginTime().format(formatter);
-        }
-
+        // ১. ডাটাবেজ আপডেট করার আগেই আগের সময়টি তুলে রাখা হচ্ছে
+         lastLoginTimeFromDb = user.getLastLoginTime();
+            System.out.println("befor::"+lastLoginTimeFromDb);
+        // ২. এবার বর্তমান সময় ডাটাবেজে সেভ করা হচ্ছে
         user.setLastLoginTime(LocalDateTime.now());
         userService.save(user);
+        System.out.println("after::"+user.getLastLoginTime());
 
-        // JWT টোকেন তৈরি করা
-        String jwtToken = jwtUtil.generateToken(user.getUsername());
-
-        // কুকি সেট করা
+        // ৩. টোকেন ও কুকি লজিক
+        UserDetails userDetails = userService.loadUserByUsername(user.getUsername());
+        String jwtToken = jwtUtil.generateToken(userDetails);
         Cookie cookie = new Cookie("accessToken", jwtToken);
-        cookie.setHttpOnly(true);       // জাভাস্ক্রিপ্ট থেকে কুকি রিড করা যাবে না (নিরাপদ)
-        cookie.setPath("/");            // পুরো অ্যাপের জন্য ভ্যালিড
-        cookie.setMaxAge(8 * 60 * 60);         // 🕒 ৮ ঘন্টার জন্য
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(8 * 60 * 60);
         response.addCookie(cookie);
 
-        // রেসপন্স বডি তৈরি করা
+        // ৪. ফ্রন্টএন্ডে পাঠানোর জন্য রোল লিস্ট তৈরি করা
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+
+        // ৫. রেসপন্স বডি (আগের সব তথ্য অপরিবর্তিত রেখে শুধু lastLoginTime যুক্ত করা হলো)
         Map<String, Object> responseBody = new HashMap<>();
         responseBody.put("message", "Login successful!");
+        responseBody.put("userId", user.getId());
         responseBody.put("username", user.getUsername());
+        responseBody.put("roles", roles);
         responseBody.put("fullName", user.getPersonnelInfo() != null ? user.getPersonnelInfo().getName() : "Name Not Found");
-        responseBody.put("email", user.getEmail());
-        responseBody.put("userType", user.getUserTypeInfo() != null ? user.getUserTypeInfo().getUserType() : "General");
-        responseBody.put("lastLogin", lastLoginToShow);
+
+        // শুধু পূর্বের লগইন টাইমটি এখানে যোগ করা হলো
+        responseBody.put("lastLoginTime", lastLoginTimeFromDb);
 
         return ResponseEntity.ok(responseBody);
     }
 
-    // 👈 ৪. নতুন লগআউট এন্ডপয়েন্ট (কুকি ডিলিট করার জন্য)
     @PostMapping("/logout")
     public ResponseEntity<?> logoutUser(HttpServletRequest request, HttpServletResponse response) {
-        // লগআউটের সময় কুকিটি মুছে ফেলার জন্য নতুন কুকি তৈরি করে MaxAge 0 করা হচ্ছে
         Cookie cookie = new Cookie("accessToken", null);
         cookie.setHttpOnly(true);
-        cookie.setSecure(false); // লোকালহোস্টের জন্য false (প্রোডাকশনে true করবেন)
-        cookie.setPath("/");     // পুরো অ্যাপ্লিকেশনের জন্য ভ্যালিড
-        cookie.setMaxAge(0);     // MaxAge 0 সেট করলে ব্রাউজার কুকিটি সাথে সাথে মুছে ফেলে
+        cookie.setSecure(false);
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
         response.addCookie(cookie);
+
 
         SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
         logoutHandler.logout(request, response, SecurityContextHolder.getContext().getAuthentication());
@@ -127,7 +132,7 @@ public class UserController {
     @Transactional
     public void updatePassword(UserInfo user, String newPassword) {
         user.setPassword(passwordEncoder.encode(newPassword));
-        user.setResetToken(null); // পাসওয়ার্ড চেঞ্জ হলে টোকেন মুছে ফেলুন
+        user.setResetToken(null);
         userService.save(user);
     }
 
@@ -142,7 +147,7 @@ public class UserController {
         if (userOptional.isPresent()) {
             UserInfo user = userOptional.get();
 
-            // সময় চেক করা
+
             if (!userService.isTokenValid(user)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("টোকেনের মেয়াদ শেষ হয়ে গেছে!");
             }
@@ -160,9 +165,35 @@ public class UserController {
     }
 
 
-    @GetMapping("/me")
+    @GetMapping(value = "/me", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getMe() {
-        // এই এন্ডপয়েন্টটি ফিল্টার হয়েই আসবে, তাই কুকি না থাকলে ফিল্টার নিজেই 401 পাঠাবে।
-        return ResponseEntity.ok("Valid");
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null && authentication.isAuthenticated() &&
+                !(authentication.getPrincipal() instanceof String && authentication.getPrincipal().equals("anonymousUser"))) {
+
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+
+            // ১. ডাটাবেজ থেকে পূর্ণাঙ্গ UserInfo খুঁজে নিন
+            Optional<UserInfo> userOptional = userService.findByUserName(userDetails.getUsername());
+
+            if (userOptional.isPresent()) {
+                UserInfo user = userOptional.get();
+
+                List<String> roles = userDetails.getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .collect(Collectors.toList());
+
+                Map<String, Object> responseBody = new HashMap<>();
+                responseBody.put("username", user.getUsername());
+                responseBody.put("roles", roles);
+                // ২. এখন আপনি user অবজেক্ট থেকে lastLoginTime পাচ্ছেন
+                responseBody.put("fullName", user.getPersonnelInfo() != null ? user.getPersonnelInfo().getName() : "Name Not Found");
+
+                return ResponseEntity.ok(responseBody);
+            }
+        }
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not authenticated");
     }
 }

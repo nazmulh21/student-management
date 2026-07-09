@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class CategoryService {
@@ -32,4 +33,17 @@ public class CategoryService {
     public void doDelete(Long id){
          categoryRepo.deleteById(id);
     }
+    public List<CollectionCategoryInfo> getExamTypeList(){
+        // ১. ডাটাবেজ থেকে সব ক্যাটাগরি নিয়ে আসা
+        List<CollectionCategoryInfo> list = categoryRepo.findAll();
+
+        // ২. স্ট্রিম দিয়ে ফিল্টার করা (অবজেক্টের ভেতর থেকে গেটার মেথড দিয়ে নাম তুলে এনে)
+        List<CollectionCategoryInfo> examList = list.stream()
+                .filter(data -> data.getCategoryName() != null &&
+                        data.getCategoryName().toLowerCase().contains("exam"))
+                .collect(Collectors.toList());
+        return examList;
+    }
+
+
 }

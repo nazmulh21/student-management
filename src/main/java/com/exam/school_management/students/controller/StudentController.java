@@ -13,10 +13,12 @@ import com.exam.school_management.students.model.StudentInfo;
 import com.exam.school_management.students.service.FileUploadService;
 import com.exam.school_management.students.service.StudentService;
 
+import com.exam.school_management.user.user.model.CustomUserDetails;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -165,6 +167,14 @@ public class StudentController {
 
     @GetMapping("/list")
     public List<StudentInfo> getAllStudents() {
+        //...........   //example of get user id
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof CustomUserDetails) {
+            Long userId = ((CustomUserDetails) principal).getId();
+            System.out.println("বর্তমানে লগইন করা ইউজারের আইডি: " + userId);
+        }
+        //.....................end............
+
         return studentService.getAllStudent();
     }
 
@@ -270,5 +280,10 @@ public class StudentController {
         }
 
         return ResponseEntity.ok(stu);
+    }
+
+    @GetMapping("/list/{classId}")
+    public List<StudentInfo> getAllStudentByClassId(@PathVariable Long classId){
+        return studentService.getAllStudentByClassId(classId);
     }
 }

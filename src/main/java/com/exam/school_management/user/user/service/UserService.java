@@ -3,13 +3,17 @@ package com.exam.school_management.user.user.service;
 import com.exam.school_management.personnel.model.PersonnelInfo;
 import com.exam.school_management.personnel.repo.PersonnelRepo;
 import com.exam.school_management.user.user.dto.UserRegistrationDto;
+import com.exam.school_management.user.user.model.CustomUserDetails;
 import com.exam.school_management.user.user.model.UserInfo;
 import com.exam.school_management.user.user.repo.UserRepository;
+import com.exam.school_management.user.user_role.model.UserRoleMapping;
+import com.exam.school_management.user.user_role.repo.UserRoleMappingRepository;
 import com.exam.school_management.user.user_type.model.UserTypeInfo;
 import com.exam.school_management.user.user_type.repo.UserTypeRepo;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -18,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -30,17 +35,20 @@ public class UserService implements UserDetailsService {
     private final PersonnelRepo personnelRepository;
     private final PasswordEncoder passwordEncoder;
     private final JavaMailSender mailSender;
+    private final UserRoleMappingRepository userRoleMappingRepository;
 
     // 👈 কনস্ট্রাক্টরের PasswordEncoder এর আগে @Lazy যুক্ত করুন
     public UserService(UserRepository userRepository,
                        UserTypeRepo userTypeRepository,
                        PersonnelRepo personnelRepository,
-                       @Lazy PasswordEncoder passwordEncoder, JavaMailSender mailSender) {
+                       @Lazy PasswordEncoder passwordEncoder, JavaMailSender mailSender, UserRoleMappingRepository userRoleMappingRepository) {
         this.userRepository = userRepository;
         this.userTypeRepository = userTypeRepository;
         this.personnelRepository = personnelRepository;
         this.passwordEncoder = passwordEncoder;
         this.mailSender = mailSender;
+
+        this.userRoleMappingRepository = userRoleMappingRepository;
     }
 
 
@@ -86,21 +94,32 @@ public class UserService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // ডাটাবেজ থেকে ইউজার খুঁজে বের করা
         UserInfo userInfo = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
-        // স্প্রিং সিকিউরিটির বিল্ট-ইন User অবজেক্টে কনভার্ট করে রিটার্ন করা হচ্ছে
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(userInfo.getUsername())
-                .password(userInfo.getPassword())
-                .disabled(!userInfo.isActive()) // ইউজার একটিভ না থাকলে এক্সেস ব্লক করবে
-                .authorities(userInfo.getUserTypeInfo() != null ? userInfo.getUserTypeInfo().getUserType() : "ROLE_USER")
-                // 👆 আপনার মডেলে যদি রোল থাকে, সেটি এখানে পাস হবে (অথবা ডিফল্ট ROLE_USER)
-                .build();
+        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
 
+        // রোল যুক্ত করা (আগের মতো)
+        //if (userInfo.getUserTypeInfo() != null) {
+           // authorities.add(new SimpleGrantedAuthority("ROLE_" + userInfo.getUserTypeInfo().getUserType()));
+       /// }
 
+        List<UserRoleMapping> mappings = userRoleMappingRepository.findByUserId(userInfo.getId());
+        for (UserRoleMapping mapping : mappings) {
+            authorities.add(new SimpleGrantedAuthority(mapping.getRole().getRoleName()));
+        }
+
+        // 👈 কাস্টম ডিটেইলস রিটার্ন করুন
+        return new CustomUserDetails(
+                userInfo.getId(),
+                userInfo.getUsername(),
+                userInfo.getPassword(),
+                userInfo.isActive(),
+                authorities
+        );
     }
+
+
 
     public Optional<UserInfo> findByUserName(String userName) {
         return userRepository.findByUsername(userName);
