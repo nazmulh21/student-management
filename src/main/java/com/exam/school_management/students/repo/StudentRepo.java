@@ -44,4 +44,8 @@ public interface StudentRepo extends JpaRepository<StudentInfo, Long> {
 
     List<StudentInfo>findAllByClassInfo_Id(Long classId);
 
+
+    @Query("SELECT s FROM StudentInfo s WHERE s.classInfo.id = :classId AND (:groupId IS NULL OR s.groupInfo.id = :groupId) ORDER BY s.roll ASC")
+    List<StudentInfo> findByClassAndGroup(@Param("classId") Long classId, @Param("groupId") Long groupId);
+
 }

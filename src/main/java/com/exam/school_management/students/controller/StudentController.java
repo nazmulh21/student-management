@@ -6,6 +6,7 @@ import com.exam.school_management.blood_group.model.BloodInfo;
 import com.exam.school_management.classes.model.ClassInfo;
 import com.exam.school_management.district.model.DistrictInfo;
 import com.exam.school_management.enums.Status;
+import com.exam.school_management.group.model.GroupInfo;
 import com.exam.school_management.thana.model.ThanaInfo;
 import com.exam.school_management.union.model.UnionInfo;
 import com.exam.school_management.students.dto.StudentDTO;
@@ -101,6 +102,9 @@ public class StudentController {
             }
             if (dto.getUnionId() != null) {
                 entity.setUnionInfo(new UnionInfo(dto.getUnionId()));
+            }
+            if (dto.getGroupId() != null) {
+                entity.setGroupInfo(new GroupInfo(dto.getGroupId()));
             }
 
             ClassInfo selectedClass = studentService.getClassById(classId);
@@ -208,6 +212,7 @@ public class StudentController {
             @RequestParam(value = "village", required = false) String village,
             @RequestParam(value = "boardRegNo", required = false) String boardRegNo,
             @RequestParam(value = "birthRegNo", required = false) String birthRegNo,
+            @RequestParam(value = "groupId", required = false) Long groupId,
             @RequestParam(value = "scholarshipId", required = false) Long scholarshipId,
             @RequestParam(value = "tuitionFeesFacilities", required = false) BigDecimal tuitionFeesFacilities,
             @RequestParam(value = "isActive", required = false) boolean isActive,
@@ -219,7 +224,7 @@ public class StudentController {
             StudentInfo updatedStudent = studentService.updateStudent(
                     uId, academicYear, image, studentName, stuDOB, father, fatherNID, mother, motherNID, mobile,
                     classId, roll, bloodId, districtId, thanaId, unionId, village,
-                    boardRegNo, birthRegNo, scholarshipId, tuitionFeesFacilities, isActive, guardianName, guardianMobile, guardianAddress
+                    boardRegNo, birthRegNo,groupId, scholarshipId, tuitionFeesFacilities, isActive, guardianName, guardianMobile, guardianAddress
             );
             return new ResponseEntity<StudentInfo>(updatedStudent, HttpStatus.OK);
         } catch (RuntimeException e) {
@@ -285,5 +290,11 @@ public class StudentController {
     @GetMapping("/list/{classId}")
     public List<StudentInfo> getAllStudentByClassId(@PathVariable Long classId){
         return studentService.getAllStudentByClassId(classId);
+    }
+
+    @GetMapping("/list/{classId}/{groupId}")
+    public List<StudentInfo> getStudents(@PathVariable Long classId, @PathVariable Long groupId) {
+        Long effectiveGroupId = (groupId == 0) ? null : groupId;
+        return studentService.findByClassAndGroup(classId, effectiveGroupId);
     }
 }

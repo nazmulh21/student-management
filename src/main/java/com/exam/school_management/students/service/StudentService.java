@@ -7,6 +7,8 @@ import com.exam.school_management.classes.repo.ClassRepo;
 import com.exam.school_management.district.model.DistrictInfo;
 import com.exam.school_management.district.repo.DistrictRepo;
 import com.exam.school_management.enums.Status;
+import com.exam.school_management.group.model.GroupInfo;
+import com.exam.school_management.group.repo.GroupRepo;
 import com.exam.school_management.scholarship.model.ScholarshipInfo;
 import com.exam.school_management.scholarship.repo.ScholarshipRepo;
 import com.exam.school_management.students.repo.StudentRepo;
@@ -42,11 +44,12 @@ public class StudentService {
     private final UnionRepo unionRepo;
     private final BloodService bloodService;
     private final ScholarshipRepo scholarshipRepo;
+    private final GroupRepo groupRepo;
 
     private final String UPLOAD_DIR = "D:/projects/school_management/student-photos/";
 
     public StudentService(StudentRepo studentRepo, ClassRepo classRepo,
-                          DistrictRepo districtRepo, ThanaRepo thanaRepo, UnionRepo unionRepo, BloodService bloodService, ScholarshipRepo scholarshipRepo) {
+                          DistrictRepo districtRepo, ThanaRepo thanaRepo, UnionRepo unionRepo, BloodService bloodService, ScholarshipRepo scholarshipRepo, GroupRepo groupRepo) {
         this.studentRepo = studentRepo;
         this.classRepo = classRepo;
         this.districtRepo = districtRepo;
@@ -54,6 +57,7 @@ public class StudentService {
         this.unionRepo = unionRepo;
         this.bloodService = bloodService;
         this.scholarshipRepo = scholarshipRepo;
+        this.groupRepo = groupRepo;
     }
 
     public ClassInfo getClassById(Long classId) {
@@ -90,7 +94,7 @@ public class StudentService {
                                      Long thanaCode,    // 🤝 Stays clean as Long
                                      Long unionCode,    // 🤝 Stays clean as Long
                                      String village, String boardRegNo,
-                                     String birthRegNo, Long scholarshipId, BigDecimal tuitionFeesFacilities,boolean isActive, String guardianName, String guardianMobile,
+                                     String birthRegNo,Long groupId, Long scholarshipId, BigDecimal tuitionFeesFacilities,boolean isActive, String guardianName, String guardianMobile,
                                      String guardianAddress) throws RuntimeException, IOException {
         // 1. Verify that the targeting profile record exists
         StudentInfo existingStudent = studentRepo.findByStuUniqueIdAndAcademicYear(uId, academicYear);
@@ -134,9 +138,11 @@ public class StudentService {
         if (scholarshipId != null) {
             scholarshipInfo = scholarshipRepo.findById(scholarshipId).orElse(null);
         }
-
-
-
+System.out.println("group IIdddd::"+groupId);
+        GroupInfo groupInfo = null;
+        if (groupId != null) {
+            groupInfo = groupRepo.findById(groupId).orElse(null);
+        }
 
         // 5. Update properties
         existingStudent.setStudentName(studentName);
@@ -158,6 +164,7 @@ public class StudentService {
         existingStudent.setVillage(village);
         existingStudent.setBoardRegNo(boardRegNo);
         existingStudent.setBirthRegNo(birthRegNo);
+        existingStudent.setGroupInfo(groupInfo);
         existingStudent.setGuardianName(guardianName);
         existingStudent.setGuardianMobile(guardianMobile);
         existingStudent.setGuardianAddress(guardianAddress);
@@ -275,6 +282,11 @@ public class StudentService {
 
     public Optional<StudentInfo> findById(Long id){
         return studentRepo.findById(id);
+    }
+
+
+    public List<StudentInfo> findByClassAndGroup(Long classId, Long groupId){
+        return studentRepo.findByClassAndGroup(classId,groupId);
     }
 
 }

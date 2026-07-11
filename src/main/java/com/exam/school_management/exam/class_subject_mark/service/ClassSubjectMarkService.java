@@ -31,4 +31,9 @@ public class ClassSubjectMarkService {
     public boolean existsByClassAndSubject(Long classId, Long subjectId) {
         return marksAssignSubjectRepo.existsByClassInfoIdAndSubjectInfoId(classId, subjectId);
     }
+
+    public List<ClassSubjectMarkInfo> getByClassAndGroup(Long classId, Long groupId) {
+        return marksAssignSubjectRepo.findByClassInfoIdAndGroupInfoId(classId, groupId);
+    }
+
 }

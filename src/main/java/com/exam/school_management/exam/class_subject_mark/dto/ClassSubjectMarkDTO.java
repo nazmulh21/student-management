@@ -5,6 +5,7 @@ import lombok.Data;
 @Data
 public class ClassSubjectMarkDTO {
     private Long classId;
+    private Long groupId;
     private Long subjectId;
     private Long mark;
 }

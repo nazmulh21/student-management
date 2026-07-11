@@ -3,6 +3,8 @@ package com.exam.school_management.exam.academic_result.service;
 import com.exam.school_management.classes.model.ClassInfo;
 import com.exam.school_management.collection.model.CollectionCategoryInfo;
 import com.exam.school_management.exam.academic_result.dto.AcademicResultDTO;
+import com.exam.school_management.exam.academic_result.dto.StudentResultDTO;
+import com.exam.school_management.exam.academic_result.dto.SubjectMarkDTO;
 import com.exam.school_management.exam.academic_result.model.AcademicResultInfo;
 import com.exam.school_management.exam.academic_result.repo.AcademicResultRepo;
 import com.exam.school_management.students.model.StudentInfo;
@@ -13,9 +15,7 @@ import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Service
 @Transactional
@@ -31,7 +31,7 @@ public class AcademicResultService {
 
     public List<AcademicResultInfo> save(List<AcademicResultDTO> dtos) {
         List<AcademicResultInfo> list = new ArrayList<>();
-
+   System.out.println("academic insert list service::"+dtos);
         for (AcademicResultDTO dto : dtos) {
             AcademicResultInfo acd;
 
@@ -66,5 +66,34 @@ public class AcademicResultService {
 
     public List<AcademicResultInfo> getList(Long classId, Long subjectId, Long examId){
        return academicResultRepo.findByClassInfoIdAndSubjectInfoIdAndCategoryInfoId(classId,subjectId,examId);
+    }
+
+    public List<AcademicResultInfo> getStudentsResultList(){
+        return academicResultRepo.findAll();
+    }
+
+
+    public List<StudentResultDTO> getGroupedResults(Long classId, Long examId) {
+        List<AcademicResultInfo> results = academicResultRepo.findByClassInfo_IdAndCategoryInfo_Id(classId, examId);
+
+        Map<Long, StudentResultDTO> studentMap = new LinkedHashMap<>();
+
+        for (AcademicResultInfo res : results) {
+            Long sId = res.getStudentInfo().getId();
+            studentMap.putIfAbsent(sId, new StudentResultDTO());
+
+            StudentResultDTO dto = studentMap.get(sId);
+            dto.setStudentId(sId);
+            dto.setStudentName(res.getStudentInfo().getStudentName());
+            dto.setRoll(res.getStudentInfo().getRoll());
+
+            SubjectMarkDTO markDto = new SubjectMarkDTO();
+            markDto.setSubjectName(res.getSubjectInfo().getSubjectName());
+            markDto.setMcq(res.getMcqMark());
+            markDto.setCreative(res.getCreativeMark());
+
+            dto.getMarks().put(res.getSubjectInfo().getId(), markDto);
+        }
+        return new ArrayList<>(studentMap.values());
     }
 }

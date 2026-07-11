@@ -17,6 +17,7 @@ public class StudentDTO {
     private Long roll;
     private Long bloodId;
     private Long districtId;
+    private Long groupId;
     private Long thanaId;
     private Long unionId;
     private String village;

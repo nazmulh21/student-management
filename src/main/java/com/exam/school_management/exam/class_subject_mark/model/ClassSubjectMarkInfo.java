@@ -1,6 +1,7 @@
 package com.exam.school_management.exam.class_subject_mark.model;
 
 import com.exam.school_management.classes.model.ClassInfo;
+import com.exam.school_management.group.model.GroupInfo;
 import com.exam.school_management.subjects.model.SubjectInfo;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -16,6 +17,10 @@ public class ClassSubjectMarkInfo {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "class_id")
     private ClassInfo classInfo;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "group_id")
+    private GroupInfo groupInfo;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "subject_id")

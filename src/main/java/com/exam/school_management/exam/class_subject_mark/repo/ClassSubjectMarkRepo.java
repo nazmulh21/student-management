@@ -12,4 +12,6 @@ public interface ClassSubjectMarkRepo extends JpaRepository<ClassSubjectMarkInfo
     List<ClassSubjectMarkInfo> findByClassInfo_Id(Long classId);
     boolean existsByClassInfoIdAndSubjectInfoId(Long classId, Long subjectId);
 
+    List<ClassSubjectMarkInfo> findByClassInfoIdAndGroupInfoId(Long classId, Long groupId);
+
 }

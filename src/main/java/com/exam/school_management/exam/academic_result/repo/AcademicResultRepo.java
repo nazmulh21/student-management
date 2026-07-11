@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface AcademicResultRepo extends JpaRepository<AcademicResultInfo,Long> {
     List<AcademicResultInfo> findByClassInfoIdAndSubjectInfoIdAndCategoryInfoId(Long classId, Long subjectId, Long examId);
+    List<AcademicResultInfo> findByClassInfo_IdAndCategoryInfo_Id(Long classId, Long examId);
 }
