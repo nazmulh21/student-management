@@ -7,6 +7,7 @@ import com.exam.school_management.classes.model.ClassInfo;
 import com.exam.school_management.district.model.DistrictInfo;
 import com.exam.school_management.enums.Status;
 import com.exam.school_management.group.model.GroupInfo;
+import com.exam.school_management.religion.model.ReligionInfo;
 import com.exam.school_management.thana.model.ThanaInfo;
 import com.exam.school_management.union.model.UnionInfo;
 import com.exam.school_management.students.dto.StudentDTO;
@@ -105,6 +106,10 @@ public class StudentController {
             }
             if (dto.getGroupId() != null) {
                 entity.setGroupInfo(new GroupInfo(dto.getGroupId()));
+            }
+
+            if (dto.getReligionId() != null) {
+                entity.setReligionInfo(new ReligionInfo(dto.getReligionId()));
             }
 
             ClassInfo selectedClass = studentService.getClassById(classId);
@@ -213,6 +218,7 @@ public class StudentController {
             @RequestParam(value = "boardRegNo", required = false) String boardRegNo,
             @RequestParam(value = "birthRegNo", required = false) String birthRegNo,
             @RequestParam(value = "groupId", required = false) Long groupId,
+            @RequestParam(value = "religionId", required = false) Long religionId,
             @RequestParam(value = "scholarshipId", required = false) Long scholarshipId,
             @RequestParam(value = "tuitionFeesFacilities", required = false) BigDecimal tuitionFeesFacilities,
             @RequestParam(value = "isActive", required = false) boolean isActive,
@@ -224,7 +230,7 @@ public class StudentController {
             StudentInfo updatedStudent = studentService.updateStudent(
                     uId, academicYear, image, studentName, stuDOB, father, fatherNID, mother, motherNID, mobile,
                     classId, roll, bloodId, districtId, thanaId, unionId, village,
-                    boardRegNo, birthRegNo,groupId, scholarshipId, tuitionFeesFacilities, isActive, guardianName, guardianMobile, guardianAddress
+                    boardRegNo, birthRegNo,groupId,religionId, scholarshipId, tuitionFeesFacilities, isActive, guardianName, guardianMobile, guardianAddress
             );
             return new ResponseEntity<StudentInfo>(updatedStudent, HttpStatus.OK);
         } catch (RuntimeException e) {

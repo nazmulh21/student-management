@@ -4,6 +4,7 @@ import com.exam.school_management.blood_group.model.BloodInfo;
 import com.exam.school_management.classes.model.ClassInfo;
 import com.exam.school_management.district.model.DistrictInfo;
 import com.exam.school_management.group.model.GroupInfo;
+import com.exam.school_management.religion.model.ReligionInfo;
 import com.exam.school_management.scholarship.model.ScholarshipInfo;
 import com.exam.school_management.thana.model.ThanaInfo;
 import com.exam.school_management.union.model.UnionInfo;
@@ -69,6 +70,10 @@ public class StudentInfo {
     @ManyToOne(fetch = FetchType.EAGER) // <-- Changed to EAGER
     @JoinColumn(name = "group_id")
     private GroupInfo groupInfo;
+
+    @ManyToOne(fetch = FetchType.EAGER) // <-- Changed to EAGER
+    @JoinColumn(name = "religion_id")
+    private ReligionInfo religionInfo;
 
 
     @ManyToOne(fetch = FetchType.EAGER) // <-- Changed to EAGER

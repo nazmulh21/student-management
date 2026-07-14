@@ -65,12 +65,14 @@ public interface OthersBillRepo extends JpaRepository<OthersBillInfo, Long> {
     );
 
     // ২. অন্যান্য বিলের বিস্তারিত বকেয়া তালিকা
+    // ২. অন্যান্য বিলের বিস্তারিত বকেয়া তালিকা (রোল অনুযায়ী সাজানো)
     @Query("SELECT o FROM OthersBillInfo o JOIN o.studentInfo s " +
             "WHERE s.classInfo.id = :classId " +
             "AND s.academicYear = :year " +
-            "AND (COALESCE(o.othersBill, 0) > (COALESCE(o.paidBill, 0) + COALESCE(o.discount, 0)))")
+            "AND (COALESCE(o.othersBill, 0) > (COALESCE(o.paidBill, 0) + COALESCE(o.discount, 0))) " +
+            "ORDER BY CAST(s.roll AS integer) ASC") // 💡 রোল অনুযায়ী সংখ্যাভিত্তিক সর্টিং
     List<OthersBillInfo> getDetailedOthersDueListByClass(
             @Param("classId") Long classId,
-            @Param("year") Long year // 💡 Long করা হলো
+            @Param("year") Long year
     );
 }
