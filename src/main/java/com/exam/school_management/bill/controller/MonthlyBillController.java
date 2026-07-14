@@ -66,7 +66,9 @@ public class MonthlyBillController {
                 if (classId == Status.SIX.getValue().longValue() ||
                         classId == Status.SEVEN.getValue().longValue() ||
                         classId == Status.EIGHT.getValue().longValue() ||
-                        classId == Status.NINE.getValue().longValue()) {
+                        classId == Status.NINE.getValue().longValue()  ||
+                        classId == Status.TEN.getValue().longValue())
+                       {
                     entity.setMonthlyBill(tuitionFees);
                 }
             }

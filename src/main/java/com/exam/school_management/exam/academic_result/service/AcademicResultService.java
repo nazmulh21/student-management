@@ -7,6 +7,7 @@ import com.exam.school_management.exam.academic_result.dto.StudentResultDTO;
 import com.exam.school_management.exam.academic_result.dto.SubjectMarkDTO;
 import com.exam.school_management.exam.academic_result.model.AcademicResultInfo;
 import com.exam.school_management.exam.academic_result.repo.AcademicResultRepo;
+import com.exam.school_management.group.model.GroupInfo;
 import com.exam.school_management.students.model.StudentInfo;
 import com.exam.school_management.students.service.StudentService;
 import com.exam.school_management.subjects.model.SubjectInfo;
@@ -31,14 +32,13 @@ public class AcademicResultService {
 
     public List<AcademicResultInfo> save(List<AcademicResultDTO> dtos) {
         List<AcademicResultInfo> list = new ArrayList<>();
-   System.out.println("academic insert list service::"+dtos);
         for (AcademicResultDTO dto : dtos) {
             AcademicResultInfo acd;
 
             if (dto.getId() != null) {
                 acd = academicResultRepo.findById(dto.getId()).orElse(new AcademicResultInfo());
             } else {
-                // যদি ID null হয়, তবে নতুন অবজেক্ট তৈরি করুন
+
                 acd = new AcademicResultInfo();
             }
 
@@ -47,7 +47,9 @@ public class AcademicResultService {
             acd.setSubjectInfo(new SubjectInfo(dto.getSubjectId()));
             acd.setClassInfo(new ClassInfo(dto.getClassId()));
             acd.setCategoryInfo(new CollectionCategoryInfo(dto.getExamId()));
+            acd.setGroupInfo(new GroupInfo(dto.getGroupId()));
             acd.setMcqMark(dto.getMcqMark());
+            acd.setSubjectMark(dto.getSubjectMark());
             acd.setCreativeMark(dto.getCreativeMark());
 
             StudentInfo studentInfo = studentService.findById(dto.getStudentId()).orElse(null);
@@ -75,7 +77,7 @@ public class AcademicResultService {
 
     public List<StudentResultDTO> getGroupedResults(Long classId, Long examId) {
         List<AcademicResultInfo> results = academicResultRepo.findByClassInfo_IdAndCategoryInfo_Id(classId, examId);
-
+               //System.out.println("resultsss"+results);
         Map<Long, StudentResultDTO> studentMap = new LinkedHashMap<>();
 
         for (AcademicResultInfo res : results) {
@@ -86,14 +88,52 @@ public class AcademicResultService {
             dto.setStudentId(sId);
             dto.setStudentName(res.getStudentInfo().getStudentName());
             dto.setRoll(res.getStudentInfo().getRoll());
+            dto.setGroupName(res.getGroupInfo().getGroupName());
+            dto.setAcademicYear(res.getAcademicYear());
 
             SubjectMarkDTO markDto = new SubjectMarkDTO();
             markDto.setSubjectName(res.getSubjectInfo().getSubjectName());
             markDto.setMcq(res.getMcqMark());
             markDto.setCreative(res.getCreativeMark());
+            markDto.setSubjectMark(res.getSubjectMark());
 
             dto.getMarks().put(res.getSubjectInfo().getId(), markDto);
         }
+        //System.out.println("Result list::"+studentMap);
         return new ArrayList<>(studentMap.values());
+    }
+
+
+
+
+    public StudentResultDTO getSingleStudentResult(Long studentId, Long examId) {
+        // Repository থেকে ওই স্টুডেন্ট ও পরীক্ষার সব রেজাল্ট আনুন
+        List<AcademicResultInfo> results = academicResultRepo.findByStudentInfo_IdAndCategoryInfo_Id(studentId, examId);
+        System.out.println("resultList"+results);
+        if (results.isEmpty()) return null;
+
+
+        AcademicResultInfo firstRes = results.get(0);
+        StudentResultDTO dto = new StudentResultDTO();
+        dto.setStudentId(firstRes.getStudentInfo().getId());
+        dto.setStuUniqueId(firstRes.getStudentInfo().getStuUniqueId());
+        dto.setStudentName(firstRes.getStudentInfo().getStudentName());
+        dto.setAcademicYear(firstRes.getStudentInfo().getAcademicYear());
+        dto.setRoll(firstRes.getStudentInfo().getRoll());
+        dto.setGroupName(firstRes.getGroupInfo() != null ? firstRes.getGroupInfo().getGroupName() : "N/A");
+
+        // সাবজেক্ট মার্কস ম্যাপ করা
+        for (AcademicResultInfo res : results) {
+            SubjectMarkDTO markDto = new SubjectMarkDTO();
+            markDto.setSubjectName(res.getSubjectInfo().getSubjectName());
+            markDto.setMcq(res.getMcqMark());
+            markDto.setCreative(res.getCreativeMark());
+            markDto.setSubjectMark(res.getSubjectMark());
+
+            // এখানে আইডি অনুযায়ী মার্ক সেট করা হচ্ছে
+            dto.getMarks().put(res.getSubjectInfo().getId(), markDto);
+        }
+
+        return dto;
     }
 }

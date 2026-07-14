@@ -4,6 +4,7 @@ import lombok.Data;
 
 @Data
 public class SubjectMarkDTO {
+    private Double subjectMark;
     private String subjectName;
     private Double mcq;
     private Double creative;

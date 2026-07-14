@@ -20,7 +20,7 @@ public class AcademicResultController {
 
     @PostMapping("/save")
     public ResponseEntity<?> save(@RequestBody List<AcademicResultDTO> dtos){
-            System.out.println("cont list::"+dtos);
+
         return ResponseEntity.ok(academicResultService.save(dtos));
     }
 
@@ -41,6 +41,18 @@ public class AcademicResultController {
             @PathVariable Long examId) {
 
         return academicResultService.getGroupedResults(classId, examId);
+    }
+
+
+
+    @GetMapping("/student/mark-sheet/{studentId}/{examId}")
+    public ResponseEntity<StudentResultDTO> getStudentReport(@PathVariable Long studentId, @PathVariable Long examId) {
+        StudentResultDTO result = academicResultService.getSingleStudentResult(studentId, examId);
+        System.out.println("subject marksheett::"+result);
+        if (result != null) {
+            return ResponseEntity.ok(result);
+        }
+        return ResponseEntity.notFound().build();
     }
 
 

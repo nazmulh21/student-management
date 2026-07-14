@@ -3,6 +3,7 @@ package com.exam.school_management.exam.academic_result.model;
 
 import com.exam.school_management.classes.model.ClassInfo;
 import com.exam.school_management.collection.model.CollectionCategoryInfo;
+import com.exam.school_management.group.model.GroupInfo;
 import com.exam.school_management.students.model.StudentInfo;
 import com.exam.school_management.subjects.model.SubjectInfo;
 import jakarta.persistence.*;
@@ -34,6 +35,13 @@ public class AcademicResultInfo {
     @JoinColumn(name = "exam_id")
     private CollectionCategoryInfo categoryInfo;
 
+    @ManyToOne(cascade = CascadeType.REFRESH)
+    @JoinColumn(name = "group_id")
+    private GroupInfo groupInfo;
+
+    @Column(name = "subject_mark")
+    private Double subjectMark;
+
     @Column(name = "mcq_mark")
     private Double mcqMark;
 
@@ -49,4 +57,10 @@ public class AcademicResultInfo {
     @Column(name = "create_date")
     private Date createDate;
 
+    public AcademicResultInfo() {
+    }
+
+    public AcademicResultInfo(Long id) {
+        this.id = id;
+    }
 }

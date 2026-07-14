@@ -7,7 +7,9 @@ public class AcademicResultDTO {
     private Long id;
     private Long classId;
     private Long subjectId;
+    private Double subjectMark;
     private Long examId;
+    private Long groupId;
     private Long studentId;
     private Double mcqMark;
     private Double creativeMark;

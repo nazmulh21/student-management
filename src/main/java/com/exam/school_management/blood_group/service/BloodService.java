@@ -2,6 +2,7 @@ package com.exam.school_management.blood_group.service;
 
 import com.exam.school_management.blood_group.model.BloodInfo;
 import com.exam.school_management.blood_group.repo.BloodRepo;
+import com.exam.school_management.subjects.model.SubjectInfo;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,10 @@ public class BloodService {
 
     public Optional<BloodInfo> findById(Long bloodId){
         return bloodRepo.findById(bloodId);
+    }
+
+    public void delete(Long id){
+        bloodRepo.deleteById(id);
     }
 
 }
