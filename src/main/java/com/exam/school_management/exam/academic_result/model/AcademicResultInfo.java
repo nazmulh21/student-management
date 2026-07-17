@@ -48,6 +48,12 @@ public class AcademicResultInfo {
     @Column(name = "creative_mark")
     private Double creativeMark;
 
+    @Column(name = "practical_mark")
+    private Double practicalMark;
+
+    @Column(name = "absent")
+    private String absent;
+
     @Column(name = "academci_year")
     private Long academicYear;
 

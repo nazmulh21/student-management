@@ -13,4 +13,6 @@ public class AcademicResultDTO {
     private Long studentId;
     private Double mcqMark;
     private Double creativeMark;
+    private Double practicalMark;
+    private String absent;
 }

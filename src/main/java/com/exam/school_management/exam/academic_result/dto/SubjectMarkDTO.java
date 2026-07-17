@@ -8,4 +8,6 @@ public class SubjectMarkDTO {
     private String subjectName;
     private Double mcq;
     private Double creative;
+    private Double practicalMark;
+    private String absent;
 }
