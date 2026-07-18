@@ -54,48 +54,61 @@ public class UserService implements UserDetailsService {
 
     @Transactional
     public String registerUser(UserRegistrationDto dto) {
-        // ১. ইউনিক ফিল্ডগুলো চেক করা
-        if (userRepository.existsByUsername(dto.getUsername())) {
-            throw new RuntimeException("Error: Username is already taken!");
-        }
-        if (userRepository.existsByEmail(dto.getEmail())) {
-            throw new RuntimeException("Error: Email is already in use!");
-        }
-        if (userRepository.existsByMobile(dto.getMobile())) {
-            throw new RuntimeException("Error: Mobile number is already in use!");
+        UserInfo user;
+
+        // ১. আপডেট নাকি সেভ চেক করা
+        if (dto.getId() != null) {
+            // আপডেট মোড: বিদ্যমান ইউজার খুঁজে বের করা
+            user = userRepository.findById(dto.getId())
+                    .orElseThrow(() -> new RuntimeException("Error: User not found!"));
+
+            // ইউনিক ফিল্ড চেকের সময় বর্তমান ইউজারকে বাদ দিয়ে অন্য কারো সাথে ম্যাচ করে কি না তা দেখা
+            if (userRepository.existsByUsernameAndIdNot(dto.getUsername(), dto.getId())) {
+                throw new RuntimeException("Error: Username is already taken!");
+            }
+            // এভাবে ইমেইল এবং মোবাইলও চেক করতে হবে
+        } else {
+            // সেভ মোড: নতুন অবজেক্ট তৈরি
+            if (userRepository.existsByUsername(dto.getUsername())) {
+                throw new RuntimeException("Error: Username is already taken!");
+            }
+            user = new UserInfo();
         }
 
-        // ২. UserTypeInfo অবজেক্ট খুঁজে বের করা
-        UserTypeInfo userTypeInfo = userTypeRepository.findById(dto.getUserTypeId())
-                .orElseThrow(() -> new RuntimeException("Error: User Type not found!"));
-
-        // ৩. নতুন UserInfo অবজেক্ট তৈরি এবং ডেটা সেট করা
-        UserInfo user = new UserInfo();
+        // ২. কমন ডেটা সেট করা (যা আপডেট এবং সেভ উভয়ের জন্যই প্রযোজ্য)
         user.setUsername(dto.getUsername());
         user.setEmail(dto.getEmail());
         user.setMobile(dto.getMobile());
-        user.setActive(true);
+        user.setActive(dto.isActive());
+
+        // ৩. রিলেশনশিপ ডেটা সেট করা
+        UserTypeInfo userTypeInfo = userTypeRepository.findById(dto.getUserTypeId())
+                .orElseThrow(() -> new RuntimeException("Error: User Type not found!"));
         user.setUserTypeInfo(userTypeInfo);
 
-        // পাসওয়ার্ড হ্যাশ করা
-        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        // পাসওয়ার্ড শুধুমাত্র নতুন ইউজার হলে বা প্রয়োজন হলে সেট করবেন
+        if (dto.getId() == null || (dto.getPassword() != null && !dto.getPassword().isEmpty())) {
+            user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
 
-        // ৪. PersonnelInfo যুক্ত করা (যদি থাকে)
+        // ৪. PersonnelInfo যুক্ত করা
         if (dto.getPersonnelId() != null) {
             PersonnelInfo personnelInfo = personnelRepository.findById(dto.getPersonnelId())
                     .orElseThrow(() -> new RuntimeException("Error: Personnel Info not found!"));
             user.setPersonnelInfo(personnelInfo);
         }
 
-        // ডাটাবেজে সেভ করা
         userRepository.save(user);
-        return "User registered successfully!";
+        return dto.getId() == null ? "User registered successfully!" : "User updated successfully!";
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         UserInfo userInfo = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+        if (!userInfo.isActive()) {
+            throw new org.springframework.security.authentication.DisabledException("Your account is disabled. Please contact admin.");
+        }
 
         List<SimpleGrantedAuthority> authorities = new ArrayList<>();
 

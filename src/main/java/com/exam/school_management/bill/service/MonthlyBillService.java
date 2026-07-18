@@ -68,7 +68,7 @@ public class MonthlyBillService {
     }
 
     public List<MonthlyBillInfo> getDetailsBypriod(String academicYear, Long monthId){
-        return monthlyBillRepo.findByAcademicYearAndMonthInfoMonthId(academicYear,monthId);
+        return monthlyBillRepo.findByAcademicYearAndMonthInfoMonthIdOrderByStudentInfoRollAsc(academicYear,monthId);
     }
 
     public List<MonthlyBillInfo> findUnpaidBillByClassAndRoll(Long classId, Long roll,String queryYear){

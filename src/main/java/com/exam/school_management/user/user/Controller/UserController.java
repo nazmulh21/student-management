@@ -43,7 +43,7 @@ public class UserController {
 
     @PostMapping("/register")
     public ResponseEntity<String> registerUser(@RequestBody UserRegistrationDto registrationDto) {
-        System.out.println("data::"+registrationDto);
+        //System.out.println("data::"+registrationDto);
         try {
             String message = userService.registerUser(registrationDto);
             return ResponseEntity.ok(message);
@@ -55,23 +55,30 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody UserLoginDto loginDto, HttpServletResponse response) {
         Optional<UserInfo> userOptional = userService.findByUserName(loginDto.getUsername());
-        LocalDateTime lastLoginTimeFromDb;
+
+        // ১. ইউজার এক্সিস্টেন্স এবং পাসওয়ার্ড চেক
         if (userOptional.isEmpty() || !passwordEncoder.matches(loginDto.getPassword(), userOptional.get().getPassword())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password!");
         }
 
         UserInfo user = userOptional.get();
 
-        // ১. ডাটাবেজ আপডেট করার আগেই আগের সময়টি তুলে রাখা হচ্ছে
-         lastLoginTimeFromDb = user.getLastLoginTime();
-            System.out.println("befor::"+lastLoginTimeFromDb);
-        // ২. এবার বর্তমান সময় ডাটাবেজে সেভ করা হচ্ছে
+        // ২. স্ট্যাটাস চেক (এখানেই আটকে দিন)
+        if (!user.isActive()) {
+            System.out.println("লগইন প্রচেষ্টা ব্যর্থ: ইউজার " + user.getUsername() + " ইন-অ্যাক্টিভ/ব্লকড!");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Your account is disabled!");
+        }
+
+        // ৩. Last Login Time আপডেট
+        LocalDateTime lastLoginTimeFromDb = user.getLastLoginTime();
         user.setLastLoginTime(LocalDateTime.now());
         userService.save(user);
-        System.out.println("after::"+user.getLastLoginTime());
 
-        // ৩. টোকেন ও কুকি লজিক
+        // ৪. UserDetails লোড করা
+        // এখানে কোনো ট্রাই-ক্যাচ বা অন্য কিছু দরকার নেই কারণ আমরা অলরেডি উপরে চেক করে ফেলেছি
         UserDetails userDetails = userService.loadUserByUsername(user.getUsername());
+
+        // ৫. টোকেন জেনারেশন
         String jwtToken = jwtUtil.generateToken(userDetails);
         Cookie cookie = new Cookie("accessToken", jwtToken);
         cookie.setHttpOnly(true);
@@ -79,20 +86,17 @@ public class UserController {
         cookie.setMaxAge(8 * 60 * 60);
         response.addCookie(cookie);
 
-        // ৪. ফ্রন্টএন্ডে পাঠানোর জন্য রোল লিস্ট তৈরি করা
+        // ৬. রোলস এবং রেসপন্স
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
 
-        // ৫. রেসপন্স বডি (আগের সব তথ্য অপরিবর্তিত রেখে শুধু lastLoginTime যুক্ত করা হলো)
         Map<String, Object> responseBody = new HashMap<>();
         responseBody.put("message", "Login successful!");
         responseBody.put("userId", user.getId());
         responseBody.put("username", user.getUsername());
         responseBody.put("roles", roles);
         responseBody.put("fullName", user.getPersonnelInfo() != null ? user.getPersonnelInfo().getName() : "Name Not Found");
-
-        // শুধু পূর্বের লগইন টাইমটি এখানে যোগ করা হলো
         responseBody.put("lastLoginTime", lastLoginTimeFromDb);
 
         return ResponseEntity.ok(responseBody);
@@ -195,5 +199,11 @@ public class UserController {
         }
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not authenticated");
+    }
+
+    @GetMapping("/{index}")
+    public UserInfo getUser(@PathVariable String index){
+       // System.out.println("index "+index);
+      return  userService.findByUserName(index).get();
     }
 }

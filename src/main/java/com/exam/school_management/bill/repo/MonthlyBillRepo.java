@@ -26,7 +26,7 @@ public interface MonthlyBillRepo extends JpaRepository<MonthlyBillInfo, Long> {
             "ORDER BY b.academicYear DESC, b.monthInfo.monthId ASC")
     List<BillSummaryDTO> findDistinctYearAndMonths();
 
-    List<MonthlyBillInfo> findByAcademicYearAndMonthInfoMonthId(String academicYear, Long monthId);
+     List<MonthlyBillInfo> findByAcademicYearAndMonthInfoMonthIdOrderByStudentInfoRollAsc(String academicYear, Long monthId);
 
     @Query("SELECT s FROM MonthlyBillInfo s " +
             "WHERE s.studentInfo.classInfo.id = :classId " +

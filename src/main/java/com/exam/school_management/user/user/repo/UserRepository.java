@@ -14,4 +14,6 @@ public interface UserRepository extends JpaRepository<UserInfo, Long> {
     Optional<UserInfo> findByPersonnelInfoIndex(String index);
 
     Optional<UserInfo> findByResetToken(String resetToken);
+
+    boolean existsByUsernameAndIdNot(String username, Long id);
 }

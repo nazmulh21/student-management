@@ -28,7 +28,7 @@ public interface OthersBillRepo extends JpaRepository<OthersBillInfo, Long> {
 
 
 
-    @Query("SELECT o FROM OthersBillInfo o WHERE o.studentInfo.academicYear = :academicYear AND o.collectionCategoryInfo.id = :categoryId")
+    @Query("SELECT o FROM OthersBillInfo o WHERE o.studentInfo.academicYear = :academicYear AND o.collectionCategoryInfo.id = :categoryId ORDER BY o.studentInfo.roll ASC")
     List<OthersBillInfo> findOthersBills(@Param("academicYear") String academicYear, @Param("categoryId") Long categoryId);
 
 
