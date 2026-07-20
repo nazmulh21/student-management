@@ -29,8 +29,8 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequestInfo,L
      */
     List<LeaveRequestInfo> findByStatus(LeaveStatus status);
 
-    @Query("SELECT l FROM LeaveRequestInfo l WHERE l.status = 'PENDING'")
-    List<LeaveRequestInfo> findAllPendingRequests();
+    @Query("SELECT l FROM LeaveRequestInfo l WHERE l.status = 'PENDING' AND l.forwardTo = :forwardTo")
+    List<LeaveRequestInfo> findAllPendingRequests(@Param("forwardTo") Long forwardTo);
 
     /**
      * ৩. নির্দিষ্ট একজন শিক্ষকের জন্য:

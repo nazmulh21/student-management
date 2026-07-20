@@ -48,7 +48,7 @@ public class AcademicResultController {
     @GetMapping("/student/mark-sheet/{studentId}/{examId}")
     public ResponseEntity<StudentResultDTO> getStudentReport(@PathVariable Long studentId, @PathVariable Long examId) {
         StudentResultDTO result = academicResultService.getSingleStudentResult(studentId, examId);
-        System.out.println("subject marksheett::"+result);
+        //System.out.println("subject marksheett::"+result);
         if (result != null) {
             return ResponseEntity.ok(result);
         }

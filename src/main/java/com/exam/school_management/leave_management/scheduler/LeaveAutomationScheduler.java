@@ -14,7 +14,6 @@ public class LeaveAutomationScheduler {
 
 
     private final PersonnelRepo personnelRepository;
-
     private final LeaveBalanceService leaveBalanceService;
 
     public LeaveAutomationScheduler(PersonnelRepo personnelRepository, LeaveBalanceService leaveBalanceService) {

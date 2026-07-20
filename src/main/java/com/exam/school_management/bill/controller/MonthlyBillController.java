@@ -43,7 +43,7 @@ public class MonthlyBillController {
     @PostMapping("/save")
     public ResponseEntity<?> doSave(@RequestBody List<BillDTO> dtos) {
         List<MonthlyBillInfo> list = new ArrayList<>();
-    System.out.println("monthly datas:::"+dtos);
+    //System.out.println("monthly datas:::"+dtos);
         for (BillDTO dto : dtos) {
 
             MonthlyBillInfo entity = new MonthlyBillInfo();

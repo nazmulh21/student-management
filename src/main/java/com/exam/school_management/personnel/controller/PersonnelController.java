@@ -5,6 +5,7 @@ import com.exam.school_management.designation.model.DesignationInfo;
 import com.exam.school_management.district.model.DistrictInfo;
 import com.exam.school_management.gender.model.GenderInfo;
 import com.exam.school_management.job_status.model.JobStatusInfo;
+import com.exam.school_management.personnel.dto.PersonProjos;
 import com.exam.school_management.personnel.dto.PersonnelDTO;
 import com.exam.school_management.personnel.model.PersonnelInfo;
 import com.exam.school_management.personnel.service.PersonnelService;
@@ -103,8 +104,13 @@ public class PersonnelController {
 
 
     @GetMapping("/list")
-    public ResponseEntity<List<PersonnelInfo>> getList(){
-        return ResponseEntity.ok(personnelService.getPersonnelList());
+    public List<PersonnelInfo> getList(){
+        return personnelService.getPersonnelList();
+    }
+
+    @GetMapping("/get-list") //only id and name list here..
+    public List<PersonProjos> getListIdAndName(){
+        return personnelService.list();
     }
 
 

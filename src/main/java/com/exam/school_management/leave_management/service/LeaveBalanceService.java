@@ -1,5 +1,7 @@
 package com.exam.school_management.leave_management.service;
 
+import com.exam.school_management.leave_management.dto.LeaveBalanceProjos;
+import com.exam.school_management.leave_management.dto.PersonnelLeaveBalanceDTO;
 import com.exam.school_management.leave_management.model.LeaveTypeInfo;
 import com.exam.school_management.leave_management.model.PersonnelLeaveBalanceInfo;
 import com.exam.school_management.leave_management.repo.LeaveTypeRepo;
@@ -8,7 +10,10 @@ import com.exam.school_management.personnel.model.PersonnelInfo;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service // 🌟 স্প্রিং বুটের বিন হিসেবে রেজিস্টার করার জন্য অ্যানোটেশনটি যুক্ত করা হলো
 public class LeaveBalanceService {
@@ -70,5 +75,49 @@ public class LeaveBalanceService {
         balanceInfo.setRemainingDays(allocatedDays);  // বাকি ছুটি = মোট বরাদ্দকৃত ছুটি
 
         return balanceInfo;
+    }
+
+
+    public List<PersonnelLeaveBalanceDTO> save(List<PersonnelLeaveBalanceDTO> dtos) {
+        int currentYear = LocalDate.now().getYear();
+        List<PersonnelLeaveBalanceInfo> entitiesToSave = new ArrayList<>();
+
+        for (PersonnelLeaveBalanceDTO dto : dtos) {
+            PersonnelLeaveBalanceInfo entity = balanceRepository
+                    .findByPersonnelInfoIdAndLeaveTypeInfoIdAndYear(dto.getPersonnelId(), dto.getLeaveTypeId(), currentYear)
+                    .orElse(new PersonnelLeaveBalanceInfo()); // না থাকলে নতুন এনটিটি
+
+            // এনটিটি সেটআপ
+            if (entity.getId() == null) { // নতুন হলে রিলেশন সেট করুন
+                entity.setPersonnelInfo(new PersonnelInfo(dto.getPersonnelId()));
+                entity.setLeaveTypeInfo(new LeaveTypeInfo(dto.getLeaveTypeId()));
+                entity.setYear(currentYear);
+                entity.setAllocateBy(dto.getUserId());
+            }
+            entity.setAllocatedDays(dto.getAllocatedDays());
+            entitiesToSave.add(entity);
+        }
+
+        // সেভ করা
+        List<PersonnelLeaveBalanceInfo> savedEntities = balanceRepository.saveAll(entitiesToSave);
+
+        // সেভ করা এনটিটিগুলোকে DTO-তে রূপান্তর করে রিটার্ন করা
+        return savedEntities.stream().map(e -> {
+            PersonnelLeaveBalanceDTO dto = new PersonnelLeaveBalanceDTO();
+            dto.setPersonnelId(e.getPersonnelInfo().getId());
+            dto.setLeaveTypeId(e.getLeaveTypeInfo().getId());
+            dto.setAllocatedDays(e.getAllocatedDays());
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+
+    public List<LeaveBalanceProjos> getList() {
+        int currentYear = LocalDate.now().getYear();
+        return balanceRepository.getLeaveBalanceList(currentYear);
+    }
+
+    public LeaveBalanceProjos getRemainingAndAllocateDays(Long leaveTypeId, Long personnelId){
+           return balanceRepository.getRemainingOrAllocateDays(leaveTypeId,personnelId);
     }
 }

@@ -42,6 +42,7 @@ public class JwtUtil {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
         } catch (Exception e) {
+            System.out.println("JWT Validation Error: " + e.getMessage());
             // এখানে কোনো এরর থ্রো করবেন না, শুধু false রিটার্ন করুন
             return false;
         }

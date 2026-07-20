@@ -3,9 +3,11 @@ package com.exam.school_management.leave_management.controller;
 import com.exam.school_management.leave_management.model.LeaveRequestInfo;
 import com.exam.school_management.leave_management.service.LeaveManagementService;
 import com.exam.school_management.leave_management.dto.LeaveApprovalDto;
+import com.exam.school_management.user.user.model.CustomUserDetails;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,6 +28,7 @@ public class LeaveRequestController {
      */
     @PostMapping("/apply")
     public ResponseEntity<?> applyForLeave(@RequestBody LeaveRequestInfo leaveRequest) {
+        //System.out.println("leave dataaa::"+leaveRequest);
         try {
             LeaveRequestInfo createdRequest = leaveManagementService.createLeaveRequest(leaveRequest);
             return new ResponseEntity<>(createdRequest, HttpStatus.CREATED);
@@ -59,9 +62,10 @@ public class LeaveRequestController {
         }
     }
 
-    @GetMapping("/pending-list")
-    public ResponseEntity<?> getPendingList(){
-        return ResponseEntity.ok(leaveManagementService.getPendingLeaveRequest());
+    @GetMapping("/pending-list/{id}")
+    public ResponseEntity<?> getPendingList(@PathVariable Long id){
+        List<LeaveRequestInfo> list=leaveManagementService.getPendingLeaveRequest(id);
+        return ResponseEntity.ok(list);
     }
 
 

@@ -1,5 +1,6 @@
 package com.exam.school_management.personnel.service;
 
+import com.exam.school_management.personnel.dto.PersonProjos;
 import com.exam.school_management.personnel.model.PersonnelInfo;
 import com.exam.school_management.personnel.repo.PersonnelRepo;
 import com.exam.school_management.students.model.StudentInfo;
@@ -41,7 +42,7 @@ public Optional<PersonnelInfo> findById(Long id){
    @Transactional
     public Optional<PersonnelInfo> deletePersonnelAndOnlyImage(String index) {
         PersonnelInfo personnelInfo = personnelRepo.findByIndex(index);
-        System.out.println("data;:"+personnelInfo);
+        //System.out.println("data;:"+personnelInfo);
         personnelRepo.delete(personnelInfo);
         deleteSpecificImage(personnelInfo.getIndex(), personnelInfo.getImageName());
         return null;
@@ -95,5 +96,9 @@ public Optional<PersonnelInfo> findById(Long id){
 
     public List<PersonnelInfo> getPersonnelList(){
         return personnelRepo.findAllPersonnelOrderedByDesignation();
+    }
+
+    public List<PersonProjos> list(){
+        return personnelRepo.getPersonList();
     }
 }

@@ -1,8 +1,11 @@
 package com.exam.school_management.leave_management.model;
 
 import com.exam.school_management.personnel.model.PersonnelInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 
 @Data
 @Entity
@@ -12,12 +15,16 @@ public class PersonnelLeaveBalanceInfo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "personnel_id", nullable = false)
+    //@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    @JsonIgnore
     private PersonnelInfo personnelInfo;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "leave_type_id", nullable = false)
+   // @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    @JsonIgnore
     private LeaveTypeInfo leaveTypeInfo;
 
     @Column(name = "year")
@@ -31,6 +38,11 @@ public class PersonnelLeaveBalanceInfo {
 
     @Column(name = "remaining_days")
     private Double remainingDays;
+
+    @Column(name = "allocate_by")
+    private Long allocateBy;
+
+
 
 
     public PersonnelLeaveBalanceInfo() {

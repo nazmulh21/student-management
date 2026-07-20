@@ -39,7 +39,7 @@ public class ReceiptSummaryController {
     @GetMapping("/details/{receiptNo}")
     public ResponseEntity<List<ReceiptInfo>> getDetails(@PathVariable String receiptNo){
         List<ReceiptInfo> list=receiptService.getDetailsByReceipt(receiptNo);
-        System.out.println("Receipt List by passing parameter::"+list);
+       // System.out.println("Receipt List by passing parameter::"+list);
         return ResponseEntity.ok(list);
     }
 

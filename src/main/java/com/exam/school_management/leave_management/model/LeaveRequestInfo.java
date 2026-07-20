@@ -31,6 +31,9 @@ public class LeaveRequestInfo {
     @JoinColumn(name = "leave_type_id", nullable = false)
     private LeaveTypeInfo leaveTypeInfo;
 
+    @Column(name = "forward_to")
+    private Long forwardTo;
+
     // --- শিক্ষকের আবেদন করা তারিখ (যা কখনো চেঞ্জ হবে না) ---
     @Column(name = "applied_start_date", nullable = false)
     private LocalDate appliedStartDate;

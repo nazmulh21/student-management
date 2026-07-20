@@ -1,5 +1,7 @@
 package com.exam.school_management.personnel.repo;
 
+import com.exam.school_management.others_bill.dto.OthersBillSummaryDTO;
+import com.exam.school_management.personnel.dto.PersonProjos;
 import com.exam.school_management.personnel.model.PersonnelInfo;
 import com.exam.school_management.students.model.StudentInfo;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -28,4 +30,12 @@ public interface PersonnelRepo extends JpaRepository<PersonnelInfo,Long> {
             "  WHEN 'Asst. Teacher' THEN 4 " +
             "  ELSE 5 END ASC, p.name ASC")
     List<PersonnelInfo> findAllPersonnelOrderedByDesignation();
+
+
+    @Query("SELECT new com.exam.school_management.personnel.dto.PersonProjos(" +
+            "p.id, " +
+            "p.name ," +
+            "p.designationInfo.designation)"+
+            "FROM PersonnelInfo p ")
+    List<PersonProjos> getPersonList();
 }

@@ -41,11 +41,8 @@ public class LeaveManagementService {
             alreadyApprovedDays = 0.0;
         }
 
-        // ৪. এই ছুটির ধরনের জন্য বছরে সর্বোচ্চ কতদিন বরাদ্দ আছে তা বের করা
-        // (ধরে নিচ্ছি request.getLeaveTypeInfo() এর ভেতরgetMaxDaysPerYear() মেথডটি আছে)
         double maxAllowedDays = request.getLeaveTypeInfo().getAllowedDaysPerYear();
 
-        // ৫. মূল লজিক: নতুন আবেদনসহ মোট দিন বরাদ্দকৃত দিনের চেয়ে বেশি হচ্ছে কিনা চেক করা
         if ((alreadyApprovedDays + totalAppliedDays) > maxAllowedDays) {
             double remainingBalance = maxAllowedDays - alreadyApprovedDays;
             throw new IllegalArgumentException("দুঃখিত! আপনার ছুটির কোটা শেষ। এই ক্যাটাগরিতে আপনার আর মাত্র "
@@ -87,8 +84,8 @@ public class LeaveManagementService {
         return leaveRequestRepository.save(request);
     }
 
-    public List<LeaveRequestInfo> getPendingLeaveRequest(){
-        return leaveRequestRepository.findAllPendingRequests();
+    public List<LeaveRequestInfo> getPendingLeaveRequest(Long forwardTo){
+        return leaveRequestRepository.findAllPendingRequests(forwardTo);
     }
 
     public List<LeaveRequestInfo> getLeaveRequestList(Long id){

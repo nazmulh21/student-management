@@ -62,6 +62,7 @@ public class UserController {
         }
 
         UserInfo user = userOptional.get();
+        //System.out.println("user :::"+user.getPersonnelInfo().getId());
 
         // ২. স্ট্যাটাস চেক (এখানেই আটকে দিন)
         if (!user.isActive()) {
@@ -94,6 +95,7 @@ public class UserController {
         Map<String, Object> responseBody = new HashMap<>();
         responseBody.put("message", "Login successful!");
         responseBody.put("userId", user.getId());
+        responseBody.put("personnelId", user.getPersonnelInfo().getId());
         responseBody.put("username", user.getUsername());
         responseBody.put("roles", roles);
         responseBody.put("fullName", user.getPersonnelInfo() != null ? user.getPersonnelInfo().getName() : "Name Not Found");
