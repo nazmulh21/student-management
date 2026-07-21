@@ -1,5 +1,6 @@
 package com.exam.school_management.leave_management.service;
 
+import com.exam.school_management.leave_management.dto.LeaveRequestProjos;
 import com.exam.school_management.leave_management.model.LeaveRequestInfo;
 import com.exam.school_management.leave_management.repo.LeaveRequestRepository;
 import com.exam.school_management.enums.LeaveStatus;
@@ -88,7 +89,7 @@ public class LeaveManagementService {
         return leaveRequestRepository.findAllPendingRequests(forwardTo);
     }
 
-    public List<LeaveRequestInfo> getLeaveRequestList(Long id){
-        return leaveRequestRepository.findByPersonnelInfoIdOrderByAppliedDateDesc(id);
+    public List<LeaveRequestProjos> getLeaveRequestList(Long id){
+        return leaveRequestRepository.leaveRequestList(id);
     }
 }

@@ -1,5 +1,7 @@
 package com.exam.school_management.students.repo;
 
+import com.exam.school_management.leave_management.dto.LeaveRequestProjos;
+import com.exam.school_management.students.dto.StudentProjos;
 import com.exam.school_management.students.model.StudentInfo;
 import org.springframework.data.jpa.repository.EntityGraph; // <-- ADD THIS IMPORT
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -48,4 +50,21 @@ public interface StudentRepo extends JpaRepository<StudentInfo, Long> {
     @Query("SELECT s FROM StudentInfo s WHERE s.classInfo.id = :classId AND (:groupId IS NULL OR s.groupInfo.id = :groupId) ORDER BY s.roll ASC")
     List<StudentInfo> findByClassAndGroup(@Param("classId") Long classId, @Param("groupId") Long groupId);
 
+
+    @Query("SELECT new com.exam.school_management.students.dto.StudentProjos(" +
+            "p.classInfo.className, " +
+            "p.roll, " +
+            "p.studentName, " +
+            "p.father, " +
+            "p.mobile, " +
+            "p.guardianName, " +
+            "p.guardianMobile, " +
+            "p.village, " +
+            "p.academicYear) " +
+            "FROM StudentInfo p WHERE p.classInfo.id = :classId AND p.academicYear = :academicYear " +
+            "ORDER BY p.roll ASC")
+    List<StudentProjos> getStudentContactlist(
+            @Param("classId") Long classId,
+            @Param("academicYear") Long academicYear
+    );
 }

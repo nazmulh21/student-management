@@ -8,6 +8,7 @@ import com.exam.school_management.district.model.DistrictInfo;
 import com.exam.school_management.enums.Status;
 import com.exam.school_management.group.model.GroupInfo;
 import com.exam.school_management.religion.model.ReligionInfo;
+import com.exam.school_management.students.dto.StudentProjos;
 import com.exam.school_management.thana.model.ThanaInfo;
 import com.exam.school_management.union.model.UnionInfo;
 import com.exam.school_management.students.dto.StudentDTO;
@@ -302,5 +303,20 @@ public class StudentController {
     public List<StudentInfo> getStudents(@PathVariable Long classId, @PathVariable Long groupId) {
         Long effectiveGroupId = (groupId == 0) ? null : groupId;
         return studentService.findByClassAndGroup(classId, effectiveGroupId);
+    }
+
+    @GetMapping("/contact/{classParam}/{yearParam}")
+    public ResponseEntity<List<StudentProjos>> getContractList(
+            @PathVariable String classParam,
+            @PathVariable String yearParam
+    ){
+        System.out.println("classParam: " + classParam);
+        System.out.println("yearParam: " + yearParam);
+
+        Long parsedClass = classParam.equalsIgnoreCase("all") ? null : Long.valueOf(classParam);
+        Long parsedYear = yearParam.equalsIgnoreCase("all") ? null : Long.valueOf(yearParam);
+
+        List<StudentProjos> list = studentService.getStudentContractList(parsedClass, parsedYear);
+        return ResponseEntity.ok(list);
     }
 }

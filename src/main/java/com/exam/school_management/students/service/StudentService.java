@@ -13,6 +13,7 @@ import com.exam.school_management.religion.model.ReligionInfo;
 import com.exam.school_management.religion.repo.ReligionRepo;
 import com.exam.school_management.scholarship.model.ScholarshipInfo;
 import com.exam.school_management.scholarship.repo.ScholarshipRepo;
+import com.exam.school_management.students.dto.StudentProjos;
 import com.exam.school_management.students.repo.StudentRepo;
 import com.exam.school_management.thana.model.ThanaInfo;
 import com.exam.school_management.thana.repo.ThanaRepo;
@@ -297,6 +298,10 @@ public class StudentService {
 
     public List<StudentInfo> findByClassAndGroup(Long classId, Long groupId){
         return studentRepo.findByClassAndGroup(classId,groupId);
+    }
+
+    public List<StudentProjos> getStudentContractList(Long classParam,Long yearParam){
+       return studentRepo.getStudentContactlist(classParam,yearParam);
     }
 
 }

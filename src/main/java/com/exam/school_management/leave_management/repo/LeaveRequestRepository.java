@@ -1,6 +1,7 @@
 package com.exam.school_management.leave_management.repo;
 
 import com.exam.school_management.enums.LeaveStatus;
+import com.exam.school_management.leave_management.dto.LeaveRequestProjos;
 import com.exam.school_management.leave_management.model.LeaveRequestInfo;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -36,7 +37,23 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequestInfo,L
      * ৩. নির্দিষ্ট একজন শিক্ষকের জন্য:
      * তিনি নিজের সব ছুটির আবেদনের ইতিহাস (History) দেখতে চাইলে এটি ব্যবহৃত হবে।
      */
-    List<LeaveRequestInfo> findByPersonnelInfoIdOrderByAppliedDateDesc(Long personnelId);
+    List<LeaveRequestInfo> findByPersonnelInfoIdOrderByAppliedDateDesc(Long personnelId);//
+
+    @Query("SELECT new com.exam.school_management.leave_management.dto.LeaveRequestProjos(" +
+            "p.personnelInfo.name, " +
+            "p.personnelInfo.designationInfo.designation, " +
+            "p.leaveTypeInfo.leaveTypeName, " +
+            "p.appliedStartDate, " +
+            "p.appliedDate, " +
+            "p.appliedTotalDays, " +
+            "p.approvedTotalDays, " +
+            "p.status, " +
+            "forward.name) " +
+            "FROM LeaveRequestInfo p " +
+            "LEFT JOIN PersonnelInfo forward ON p.forwardTo = forward.id " +
+            "WHERE p.personnelInfo.id = :personnelId " +
+            "ORDER BY p.appliedStartDate DESC")
+    List<LeaveRequestProjos> leaveRequestList(@Param("personnelId") Long personnelId);
 
     /**
      * ৪. লিভ ব্যালেন্স চেক করার জন্য:

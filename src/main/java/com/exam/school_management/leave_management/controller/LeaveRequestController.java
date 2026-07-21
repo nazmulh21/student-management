@@ -1,5 +1,6 @@
 package com.exam.school_management.leave_management.controller;
 
+import com.exam.school_management.leave_management.dto.LeaveRequestProjos;
 import com.exam.school_management.leave_management.model.LeaveRequestInfo;
 import com.exam.school_management.leave_management.service.LeaveManagementService;
 import com.exam.school_management.leave_management.dto.LeaveApprovalDto;
@@ -71,6 +72,9 @@ public class LeaveRequestController {
 
     @GetMapping(value ="/individual/list/{personnelId}",produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getIndividualList(@PathVariable Long personnelId){
-        return ResponseEntity.ok(leaveManagementService.getLeaveRequestList(personnelId));
+       // System.out.println("personnelId ::"+personnelId);
+        List<LeaveRequestProjos> list=leaveManagementService.getLeaveRequestList(personnelId);
+      //  System.out.println("list ::"+list);
+        return ResponseEntity.ok(list);
     }
 }
