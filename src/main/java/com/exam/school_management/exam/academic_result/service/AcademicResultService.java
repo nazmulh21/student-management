@@ -38,7 +38,6 @@ public class AcademicResultService {
             if (dto.getId() != null) {
                 acd = academicResultRepo.findById(dto.getId()).orElse(new AcademicResultInfo());
             } else {
-
                 acd = new AcademicResultInfo();
             }
 
@@ -47,21 +46,28 @@ public class AcademicResultService {
             acd.setClassInfo(new ClassInfo(dto.getClassId()));
             acd.setCategoryInfo(new CollectionCategoryInfo(dto.getExamId()));
             acd.setGroupInfo(new GroupInfo(dto.getGroupId()));
-            acd.setMcqMark(dto.getMcqMark());
+
+            // সেফ কনভার্শন
+            acd.setMcqMark(dto.getMcqMark() != null ? dto.getMcqMark() : 0.0);
             acd.setSubjectMark(dto.getSubjectMark());
-            acd.setCreativeMark(dto.getCreativeMark());
-            if (dto.getPracticalMark()>0){
+            acd.setCreativeMark(dto.getCreativeMark() != null ? dto.getCreativeMark() : 0.0);
+
+            if (dto.getPracticalMark() != null && dto.getPracticalMark() > 0) {
                 acd.setPracticalMark(dto.getPracticalMark());
+            } else {
+                acd.setPracticalMark(0.0);
             }
-            if (dto.getAbsent() !=null){
+
+            if (dto.getAbsent() != null) {
                 acd.setAbsent(dto.getAbsent());
+            } else {
+                acd.setAbsent("");
             }
 
             StudentInfo studentInfo = studentService.findById(dto.getStudentId()).orElse(null);
             if (studentInfo != null) {
                 acd.setAcademicYear(studentInfo.getAcademicYear());
             }
-
 
             acd.setCreateDate(new Date());
             acd.setCreateBy(1L);

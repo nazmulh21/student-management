@@ -33,11 +33,15 @@ public class ClassSubjectMarkController {
         entity.setClassInfo(new ClassInfo(dto.getClassId()));
         entity.setGroupInfo(new GroupInfo(dto.getGroupId()));
         entity.setSubjectInfo(new SubjectInfo(dto.getSubjectId()));
+
+        // মোট মার্ক এবং আলাদা আলাদা মার্কগুলো সেট করা হলো
         entity.setMarks(dto.getMark());
+        entity.setMcqMark(dto.getMcqMark());
+        entity.setCreativeMark(dto.getCreativeMark());
+        entity.setPracticalMark(dto.getPracticalMark());
 
         return ResponseEntity.ok(classSubjectMarkService.save(entity));
     }
-
     @GetMapping("/{classId}")
     public List<ClassSubjectMarkInfo> findByClassId(@PathVariable Long classId){
         return classSubjectMarkService.getSubListByClassId(classId);

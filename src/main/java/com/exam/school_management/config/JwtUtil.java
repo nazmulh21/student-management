@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 public class JwtUtil {
     private final String SECRET = "your-very-long-secret-key-must-be-at-least-32-chars-long-example";
     private final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
-    private final long jwtExpirationMs = 1800000; // ৩০ মিনিট
+    private final long jwtExpirationMs = 36000000L; // ১০ ঘন্টা
 
     public String generateToken(String username) {
         return Jwts.builder().setSubject(username).setIssuedAt(new Date()).setExpiration(new Date((new Date()).getTime() + jwtExpirationMs)).signWith(key).compact();

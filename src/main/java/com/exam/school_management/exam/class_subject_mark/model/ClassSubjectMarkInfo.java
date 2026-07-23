@@ -26,8 +26,17 @@ public class ClassSubjectMarkInfo {
     @JoinColumn(name = "subject_id")
     private SubjectInfo subjectInfo;
 
-    @Column(name="marks")
-    private Long marks;
+    @Column(name = "marks")
+    private Long marks; // মোট মার্ক
+
+    @Column(name = "mcq_mark")
+    private Long mcqMark; // এমসিকিউ এর পূর্ণমান
+
+    @Column(name = "creative_mark")
+    private Long creativeMark; // সৃজনশীল এর পূর্ণমান
+
+    @Column(name = "practical_mark")
+    private Long practicalMark; // প্র্যাকটিক্যাল এর পূর্ণমান (যদি থাকে)
 
     public ClassSubjectMarkInfo() {
     }
