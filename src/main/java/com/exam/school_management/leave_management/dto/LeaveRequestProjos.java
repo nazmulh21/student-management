@@ -21,4 +21,5 @@ public class LeaveRequestProjos {
     private Double approvedTotalDays;
     private LeaveStatus status;
     private String forwardName;
+    private String forwardDesignation;
 }

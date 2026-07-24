@@ -48,7 +48,9 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequestInfo,L
             "p.appliedTotalDays, " +
             "p.approvedTotalDays, " +
             "p.status, " +
-            "forward.name) " +
+            "forward.name, " +
+
+            "forward.designationInfo.designation ) " +
             "FROM LeaveRequestInfo p " +
             "LEFT JOIN PersonnelInfo forward ON p.forwardTo = forward.id " +
             "WHERE p.personnelInfo.id = :personnelId " +
