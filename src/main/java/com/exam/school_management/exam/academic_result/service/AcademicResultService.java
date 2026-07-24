@@ -70,7 +70,7 @@ public class AcademicResultService {
             }
 
             acd.setCreateDate(new Date());
-            acd.setCreateBy(1L);
+            acd.setCreateBy(dto.getUserId());
 
             list.add(acd);
         }
@@ -87,8 +87,8 @@ public class AcademicResultService {
     }
 
 
-    public List<StudentResultDTO> getGroupedResults(Long classId, Long examId) {
-        List<AcademicResultInfo> results = academicResultRepo.findByClassInfo_IdAndCategoryInfo_Id(classId, examId);
+    public List<StudentResultDTO> getGroupedResults(Long classId, Long examId,Long year) {
+        List<AcademicResultInfo> results = academicResultRepo.findByClassInfo_IdAndCategoryInfo_IdAndAcademicYear(classId, examId,year);
                //System.out.println("resultsss"+results);
         Map<Long, StudentResultDTO> studentMap = new LinkedHashMap<>();
 

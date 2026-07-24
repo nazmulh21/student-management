@@ -35,12 +35,14 @@ public class AcademicResultController {
         return academicResultService.getStudentsResultList();
     }
 
-    @GetMapping("/grouped-list/{classId}/{examId}")
+    @GetMapping("/grouped-list/{classId}/{examId}/{year}")
     public List<StudentResultDTO> getGroupedResults(
             @PathVariable Long classId,
-            @PathVariable Long examId) {
+            @PathVariable Long examId,
+            @PathVariable Long year)
+       {
 
-        return academicResultService.getGroupedResults(classId, examId);
+        return academicResultService.getGroupedResults(classId, examId,year);
     }
 
 

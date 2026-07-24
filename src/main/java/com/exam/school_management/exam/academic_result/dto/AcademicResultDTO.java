@@ -15,4 +15,5 @@ public class AcademicResultDTO {
     private Double creativeMark;
     private Double practicalMark;
     private String absent;
+    private Long userId;
 }
