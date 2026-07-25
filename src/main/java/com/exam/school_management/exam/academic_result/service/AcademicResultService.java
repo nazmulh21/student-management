@@ -107,6 +107,7 @@ public class AcademicResultService {
             markDto.setSubjectName(res.getSubjectInfo().getSubjectName());
             markDto.setMcq(res.getMcqMark());
             markDto.setCreative(res.getCreativeMark());
+            markDto.setPracticalMark(res.getPracticalMark());
             markDto.setSubjectMark(res.getSubjectMark());
 
             dto.getMarks().put(res.getSubjectInfo().getId(), markDto);
