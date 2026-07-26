@@ -42,7 +42,9 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequestInfo,L
     @Query("SELECT new com.exam.school_management.leave_management.dto.LeaveRequestProjos(" +
             "p.personnelInfo.name, " +
             "p.personnelInfo.designationInfo.designation, " +
+            "p.personnelInfo.index, " +
             "p.leaveTypeInfo.leaveTypeName, " +
+            "p.reason, " +
             "p.appliedStartDate, " +
             "p.appliedDate, " +
             "p.appliedTotalDays, " +

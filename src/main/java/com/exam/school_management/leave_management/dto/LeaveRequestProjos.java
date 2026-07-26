@@ -14,7 +14,9 @@ import java.time.LocalDateTime; // Import LocalDateTime
 public class LeaveRequestProjos {
     private String personnelName;
     private String designation;
+    private String index;
     private String leaveTypeName;
+    private String reason;
     private LocalDate startDate;
     private LocalDateTime appliedDate; // Changed from LocalDate to LocalDateTime
     private Double appliedTotalDays;
