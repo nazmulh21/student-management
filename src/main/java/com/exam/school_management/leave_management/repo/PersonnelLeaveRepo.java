@@ -1,6 +1,7 @@
 package com.exam.school_management.leave_management.repo;
 
 import com.exam.school_management.leave_management.dto.LeaveBalanceProjos;
+import com.exam.school_management.leave_management.model.LeaveRequestInfo;
 import com.exam.school_management.leave_management.model.PersonnelLeaveBalanceInfo;
 import com.exam.school_management.personnel.dto.PersonProjos;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -40,4 +41,6 @@ public interface PersonnelLeaveRepo extends JpaRepository<PersonnelLeaveBalanceI
             "FROM PersonnelLeaveBalanceInfo p WHERE p.leaveTypeInfo.id = :leaveTypeId AND p.personnelInfo.id = :personnelId"
     )
     LeaveBalanceProjos getRemainingOrAllocateDays(@Param("leaveTypeId") Long leaveTypeId, @Param("personnelId") Long personnelId);
+
+    Optional<PersonnelLeaveBalanceInfo> findByPersonnelInfoId(Long personnelId);
 }

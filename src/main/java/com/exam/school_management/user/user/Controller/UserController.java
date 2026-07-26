@@ -204,8 +204,12 @@ public class UserController {
     }
 
     @GetMapping("/{index}")
-    public UserInfo getUser(@PathVariable String index){
-       // System.out.println("index "+index);
-      return  userService.findByUserName(index).get();
+    public ResponseEntity<?> getUser(@PathVariable String index) {
+        System.out.println("index " + index);
+
+        UserInfo user = userService.findByUserName(index)
+                .orElseThrow(() -> new RuntimeException("User not found with username: " + index));
+
+        return ResponseEntity.ok(user);
     }
 }

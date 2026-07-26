@@ -29,7 +29,7 @@ public class LeaveRequestController {
      */
     @PostMapping("/apply")
     public ResponseEntity<?> applyForLeave(@RequestBody LeaveRequestInfo leaveRequest) {
-        //System.out.println("leave dataaa::"+leaveRequest);
+        System.out.println("leave dataaa::"+leaveRequest);
         try {
             LeaveRequestInfo createdRequest = leaveManagementService.createLeaveRequest(leaveRequest);
             return new ResponseEntity<>(createdRequest, HttpStatus.CREATED);

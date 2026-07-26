@@ -2,6 +2,7 @@ package com.exam.school_management.leave_management.service;
 
 import com.exam.school_management.leave_management.dto.LeaveRequestProjos;
 import com.exam.school_management.leave_management.model.LeaveRequestInfo;
+import com.exam.school_management.leave_management.model.PersonnelLeaveBalanceInfo;
 import com.exam.school_management.leave_management.repo.LeaveRequestRepository;
 import com.exam.school_management.enums.LeaveStatus;
 import org.springframework.stereotype.Service;
@@ -9,19 +10,24 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class LeaveManagementService {
 
    private final LeaveRequestRepository leaveRequestRepository;
+   private final LeaveBalanceService leaveBalanceService;
 
-    public LeaveManagementService(LeaveRequestRepository leaveRequestRepository) {
+    public LeaveManagementService(LeaveRequestRepository leaveRequestRepository, LeaveBalanceService leaveBalanceService) {
         this.leaveRequestRepository = leaveRequestRepository;
+        this.leaveBalanceService = leaveBalanceService;
     }
     // LeaveManagementService ক্লাসের ভেতরে এই মেথডটি যুক্ত করুন:
 
 
     public LeaveRequestInfo createLeaveRequest(LeaveRequestInfo request) {
+
+
         // ১. শিক্ষক যে তারিখ সিলেক্ট করেছেন তার ব্যবধান থেকে মোট দিন হিসাব করা
         long totalAppliedDays = ChronoUnit.DAYS.between(request.getAppliedStartDate(), request.getAppliedEndDate()) + 1;
         request.setAppliedTotalDays((double) totalAppliedDays);
@@ -58,24 +64,43 @@ public class LeaveManagementService {
 
     @Transactional
     public LeaveRequestInfo approveLeaveRequestByHeadMaster(
-            Long requestId, 
-            LocalDate headMasterStartDate, 
-            LocalDate headMasterEndDate, 
+            Long requestId,
+            LocalDate headMasterStartDate,
+            LocalDate headMasterEndDate,
             Long headMasterId) {
-        
-        // ১. ডাটাবেজ থেকে রিকোয়েস্টটি বের করা
+
+        // ১. ডাটাবেজ থেকে রিকোয়েস্টটি বের করা
         LeaveRequestInfo request = leaveRequestRepository.findById(requestId)
                 .orElseThrow(() -> new RuntimeException("Leave request not found"));
 
-        // ২. প্রধান শিক্ষকের সিলেক্ট করা তারিখ অনুযায়ী দিন হিসাব করা (শুরুর দিনসহ)
+        // ২. প্রধান শিক্ষকের সিলেক্ট করা তারিখ অনুযায়ী দিন হিসাব করা (শুরুর দিনসহ)
         long calculatedApprovedDays = ChronoUnit.DAYS.between(headMasterStartDate, headMasterEndDate) + 1;
 
-        // ৩. বিজনেস রুল ভ্যালিডেশন: দিন বাড়ানো যাবে না
+        // ৩. বিজনেস রুল ভ্যালিডেশন: দিন বাড়ানো যাবে না
         if (calculatedApprovedDays > request.getAppliedTotalDays()) {
-            throw new IllegalArgumentException("আপনি আবেদনকৃত দিনের (" + request.getAppliedTotalDays() + " দিন) চেয়ে বেশি ছুটি অনুমোদন করতে পারবেন না।");
+            throw new IllegalArgumentException("আপনি আবেদনকৃত দিনের (" + request.getAppliedTotalDays() + " দিন) চেয়ে বেশি ছুটি অনুমোদন করতে পারবেন না।");
         }
 
-        // ৪. প্রধান শিক্ষকের সিলেক্ট করা ডেটা আলাদা ফিল্ডে সেট করা (শিক্ষকের ডেটা অক্ষত থাকবে)
+        // ৪. ব্যালেন্স ইনফো ফেচ করা (এখানে রিকোয়েস্টের ভেতরে থাকা personnelInfo থেকে আইডি নিতে হবে)
+        Long personnelId = request.getPersonnelInfo().getId();
+        Optional<PersonnelLeaveBalanceInfo> balanceInfo = leaveBalanceService.findByPersonnelId(personnelId);
+
+        if (balanceInfo.isPresent()) {
+            PersonnelLeaveBalanceInfo balance = balanceInfo.get();
+            Double allocatedDay = balance.getAllocatedDays() != null ? balance.getAllocatedDays() : 0.0;
+            Double remainingDays = balance.getRemainingDays();
+
+            // যদি remainingDays null হয়, তবে allocatedDay থেকে বিয়োগ করবে
+            // আর না হলে পূর্বের remainingDays থেকে বিয়োগ করবে
+            Double currentBaseDays = (remainingDays != null) ? remainingDays : allocatedDay;
+            Double newRemainingDays = currentBaseDays - calculatedApprovedDays;
+
+            // ব্যালেন্সে নতুন মান সেট করা
+            balance.setRemainingDays(newRemainingDays);
+            leaveBalanceService.updateLeaveBalance(balance); // অথবা আপনার ব্যালেন্স সেভ করার মেথড কল করবেন
+        }
+
+        // ৫. প্রধান শিক্ষকের সিলেক্ট করা ডেটা আলাদা ফিল্ডে সেট করা
         request.setApprovedStartDate(headMasterStartDate);
         request.setApprovedEndDate(headMasterEndDate);
         request.setApprovedTotalDays((double) calculatedApprovedDays);

@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service // 🌟 স্প্রিং বুটের বিন হিসেবে রেজিস্টার করার জন্য অ্যানোটেশনটি যুক্ত করা হলো
@@ -95,6 +96,7 @@ public class LeaveBalanceService {
                 entity.setAllocateBy(dto.getUserId());
             }
             entity.setAllocatedDays(dto.getAllocatedDays());
+            entity.setRemainingDays(null);
             entitiesToSave.add(entity);
         }
 
@@ -111,6 +113,11 @@ public class LeaveBalanceService {
         }).collect(Collectors.toList());
     }
 
+    public PersonnelLeaveBalanceInfo updateLeaveBalance(PersonnelLeaveBalanceInfo balanceInfo){
+        return balanceRepository.save(balanceInfo);
+
+    }
+
 
     public List<LeaveBalanceProjos> getList() {
         int currentYear = LocalDate.now().getYear();
@@ -119,5 +126,9 @@ public class LeaveBalanceService {
 
     public LeaveBalanceProjos getRemainingAndAllocateDays(Long leaveTypeId, Long personnelId){
            return balanceRepository.getRemainingOrAllocateDays(leaveTypeId,personnelId);
+    }
+
+    public Optional<PersonnelLeaveBalanceInfo> findByPersonnelId(Long personnelId){
+        return balanceRepository.findByPersonnelInfoId(personnelId);
     }
 }
