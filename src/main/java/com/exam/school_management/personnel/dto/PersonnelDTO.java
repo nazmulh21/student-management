@@ -8,6 +8,7 @@ import java.time.LocalDate;
 @Data
 public class PersonnelDTO {
     private MultipartFile image;
+    private MultipartFile signature;
     private String name;
     private String index;
     private Long pdsId; // এটি সরাসরি ইনপুট নাম্বার টাইপ, তাই Long থাকতে পারে

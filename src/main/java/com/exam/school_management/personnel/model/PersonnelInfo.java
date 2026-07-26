@@ -50,6 +50,10 @@ public class PersonnelInfo {
     @Column(name = "mother")
     private String mother;
 
+    @Column(name = "signature")
+    private String signatureName;
+
+
     @JsonSerialize(using = LocalDateSerializer.class)
     @JsonFormat(pattern = "dd-MM-yyyy")
     @Column(name = "join_date")

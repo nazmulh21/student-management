@@ -39,7 +39,6 @@ public class PersonnelController {
 
     @PostMapping(value = "/save", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> doSave(@ModelAttribute PersonnelDTO dto) {
-        // ১. এখন এটি অবশ্যই প্রিন্ট হবে কারণ স্প্রিং ডেটা টাইপ নিয়ে আর ক্র্যাশ করবে না
 
         MultipartFile multipartFile = dto.getImage();
 
@@ -47,13 +46,21 @@ public class PersonnelController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Personnel image file is required.");
         }
 
+        // সিগনেচার ফাইল রিসিভ করা (যদি থাকে)
+        MultipartFile signatureFile = dto.getSignature();
+
         try {
             PersonnelInfo entity = new PersonnelInfo();
 
-            // ক্লিন ফাইল নেম নেওয়া
+            // ক্লিন প্রোফাইল পিকচার ফাইল নেম নেওয়া
             String fileName = StringUtils.cleanPath(Objects.requireNonNull(multipartFile.getOriginalFilename()));
             entity.setImageName(fileName);
 
+            // ক্লিন ও সেট সিগনেচার ফাইল নেম (যদি সিগনেচার ফাইল আপলোড করা হয়ে থাকে)
+            if (signatureFile != null && !signatureFile.isEmpty()) {
+                String signatureFileName = StringUtils.cleanPath(Objects.requireNonNull(signatureFile.getOriginalFilename()));
+                entity.setSignatureName(signatureFileName); // আপনার PersonnelInfo এ entity.setSignatureName() মেথড থাকতে হবে
+            }
 
             entity.setName(dto.getName());
             entity.setIndex(dto.getIndex());
@@ -75,13 +82,19 @@ public class PersonnelController {
             if (isNumeric(dto.getSubjectId())) entity.setSubjectInfo(new SubjectInfo(Long.parseLong(dto.getSubjectId())));
             if (isNumeric(dto.getGenderId())) entity.setGenderInfo(new GenderInfo(Long.parseLong(dto.getGenderId())));
 
-
-
             entity = personnelService.doSave(entity);
 
-
+            // ফাইল সেভ করার ফোল্ডার পাথ
             String uploadDir = "D:/projects/school_management/student-photos/" + entity.getIndex();
+
+            // ১. প্রোফাইল ছবি সেভ করা
             FileUploadService.saveFile(uploadDir, fileName, multipartFile);
+
+            // ২. সিগনেচার ফাইল সেভ করা (যদি সিগনেচার ফাইল দিয়ে থাকে)
+            if (signatureFile != null && !signatureFile.isEmpty()) {
+                String signatureFileName = StringUtils.cleanPath(Objects.requireNonNull(signatureFile.getOriginalFilename()));
+                FileUploadService.saveFile(uploadDir, signatureFileName, signatureFile);
+            }
 
             return ResponseEntity.status(HttpStatus.CREATED).body(entity);
 
@@ -92,7 +105,7 @@ public class PersonnelController {
         } catch (IOException e) {
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to upload image: " + e.getMessage());
+                    .body("Failed to upload file: " + e.getMessage());
         }
     }
 

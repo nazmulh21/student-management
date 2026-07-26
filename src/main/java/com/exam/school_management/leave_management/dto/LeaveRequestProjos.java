@@ -24,4 +24,6 @@ public class LeaveRequestProjos {
     private LeaveStatus status;
     private String forwardName;
     private String forwardDesignation;
+    private String forwardIndex;
+    private String forwardSignature;
 }
