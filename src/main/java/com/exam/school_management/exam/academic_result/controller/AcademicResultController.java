@@ -41,8 +41,10 @@ public class AcademicResultController {
             @PathVariable Long examId,
             @PathVariable Long year)
        {
+           List<StudentResultDTO> list=academicResultService.getGroupedResults(classId, examId,year);
+           System.out.println("List data"+list);
 
-        return academicResultService.getGroupedResults(classId, examId,year);
+        return list;
     }
 
 

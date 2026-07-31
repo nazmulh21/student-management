@@ -1,5 +1,6 @@
 package com.exam.school_management.classes.controller;
 
+import com.exam.school_management.classes.dto.ClassProjos;
 import com.exam.school_management.classes.model.ClassInfo;
 import com.exam.school_management.classes.service.ClassServiceImp;
 
@@ -87,5 +88,10 @@ public class ClassController {
     public ResponseEntity<?> doDelete(@PathVariable Long id) {
         classServiceImp.doDelete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/get-list")
+    public List<ClassProjos> getClassNames(){
+        return classServiceImp.getList();
     }
 }

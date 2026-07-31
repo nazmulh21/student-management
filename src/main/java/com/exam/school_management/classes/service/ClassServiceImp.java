@@ -1,6 +1,7 @@
 package com.exam.school_management.classes.service;
 
 
+import com.exam.school_management.classes.dto.ClassProjos;
 import com.exam.school_management.classes.model.ClassInfo;
 import com.exam.school_management.classes.repo.ClassRepo;
 import org.springframework.data.domain.Sort;
@@ -33,6 +34,10 @@ public class ClassServiceImp {
 
     public void doDelete(Long id){
         classrepo.deleteById(id);
+    }
+
+    public List<ClassProjos> getList(){
+        return classrepo.getClassList();
     }
 
 }
