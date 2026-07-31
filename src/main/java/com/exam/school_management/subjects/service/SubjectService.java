@@ -1,5 +1,6 @@
 package com.exam.school_management.subjects.service;
 
+import com.exam.school_management.subjects.dto.SubjectOptionalProjos;
 import com.exam.school_management.subjects.model.SubjectInfo;
 import com.exam.school_management.subjects.repo.SubjectRepo;
 import org.springframework.stereotype.Service;
@@ -28,5 +29,9 @@ public class SubjectService {
     }
     public void delete(Long id){
         subjectRepo.deleteById(id);
+    }
+
+    public List<SubjectOptionalProjos> getOptionalSubject(){
+        return subjectRepo.findOptionalSubjects();
     }
 }

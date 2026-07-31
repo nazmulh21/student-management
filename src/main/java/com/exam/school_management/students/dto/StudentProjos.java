@@ -7,6 +7,7 @@ public class StudentProjos {
     private String className;
     private Long roll;
     private String studentName;
+    private String groupName;
     private String fatherName;
     private String mobileNo;
     private String guardianName;
@@ -24,5 +25,11 @@ public class StudentProjos {
         this.guardianMobile = guardianMobile;
         this.village = village;
         this.academicYear=academicYear;
+    }
+
+    public StudentProjos( String studentName,Long roll, String groupName) {
+        this.studentName = studentName;
+        this.roll = roll;
+        this.groupName = groupName;
     }
 }

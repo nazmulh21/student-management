@@ -96,6 +96,7 @@ public class LeaveBalanceService {
                 entity.setAllocateBy(dto.getUserId());
             }
             entity.setAllocatedDays(dto.getAllocatedDays());
+            entity.setSetRemainingForValidation(dto.getAllocatedDays());
             entity.setRemainingDays(null);
             entitiesToSave.add(entity);
         }

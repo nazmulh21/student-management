@@ -37,7 +37,8 @@ public interface PersonnelLeaveRepo extends JpaRepository<PersonnelLeaveBalanceI
 
     @Query("SELECT new com.exam.school_management.leave_management.dto.LeaveBalanceProjos(" +
             "p.allocatedDays, " +
-            "p.remainingDays) " +
+            "p.remainingDays, " +
+            "p.setRemainingForValidation) " +
             "FROM PersonnelLeaveBalanceInfo p WHERE p.leaveTypeInfo.id = :leaveTypeId AND p.personnelInfo.id = :personnelId"
     )
     LeaveBalanceProjos getRemainingOrAllocateDays(@Param("leaveTypeId") Long leaveTypeId, @Param("personnelId") Long personnelId);

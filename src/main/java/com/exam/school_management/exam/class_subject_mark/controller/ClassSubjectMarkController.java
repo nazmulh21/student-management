@@ -2,6 +2,7 @@ package com.exam.school_management.exam.class_subject_mark.controller;
 
 import com.exam.school_management.classes.model.ClassInfo;
 import com.exam.school_management.exam.class_subject_mark.dto.ClassSubjectMarkDTO;
+import com.exam.school_management.exam.class_subject_mark.dto.ClassSubjectProjos;
 import com.exam.school_management.exam.class_subject_mark.model.ClassSubjectMarkInfo;
 import com.exam.school_management.exam.class_subject_mark.service.ClassSubjectMarkService;
 import com.exam.school_management.group.model.GroupInfo;
@@ -23,7 +24,7 @@ public class ClassSubjectMarkController {
     @PostMapping("/save")
     public ResponseEntity<?> save(@RequestBody ClassSubjectMarkDTO dto) {
 
-        boolean isExist = classSubjectMarkService.existsByClassAndSubject(dto.getClassId(), dto.getSubjectId());
+        boolean isExist = classSubjectMarkService.existsByClassAndSubject(dto.getClassId(),dto.getGroupId(), dto.getSubjectId());
 
         if (isExist) {
             return ResponseEntity.badRequest().body("This class and subject already exist!");
@@ -50,5 +51,21 @@ public class ClassSubjectMarkController {
     @GetMapping("/by/{classId}/{groupId}")
     public List<ClassSubjectMarkInfo> findByClassIdAndGroupId(@PathVariable Long classId, @PathVariable Long groupId){
         return classSubjectMarkService.getByClassAndGroup(classId,groupId);
+    }
+
+
+    @GetMapping("/class-list/{classId}/{groupId}")
+    public List<ClassSubjectProjos> getClassSubjectList(@PathVariable Long classId, @PathVariable Long groupId){
+        return classSubjectMarkService.getClassSubjectList(classId,groupId);
+    }
+
+    @GetMapping("/mandatory/sub/{classId}")
+    public List<ClassSubjectProjos> getAllCommonMandatorySubject(@PathVariable Long classId){
+        return classSubjectMarkService.getAllMandatorySubjects(classId);
+    }
+
+    @GetMapping("/group/sub/{groupId}/{classId}")
+    public List<ClassSubjectProjos> getAllGroupSub(@PathVariable Long groupId,@PathVariable Long classId){
+        return classSubjectMarkService.getAllGroupSubjects(groupId,classId);
     }
 }

@@ -3,6 +3,8 @@ package com.exam.school_management.students.dto;
 import org.springframework.web.multipart.MultipartFile;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class StudentDTO {
     private MultipartFile image;
@@ -18,6 +20,7 @@ public class StudentDTO {
     private Long bloodId;
     private Long districtId;
     private Long groupId;
+    private Long optionalId;
     private Long religionId;
     private Long thanaId;
     private Long unionId;

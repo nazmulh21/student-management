@@ -2,6 +2,7 @@ package com.exam.school_management.subjects.controller;
 
 
 import com.exam.school_management.collection.model.MonthInfo;
+import com.exam.school_management.subjects.dto.SubjectOptionalProjos;
 import com.exam.school_management.subjects.model.SubjectInfo;
 import com.exam.school_management.subjects.service.SubjectService;
 import org.springframework.http.ResponseEntity;
@@ -52,6 +53,11 @@ public class SubjectController {
     @DeleteMapping("/delete/{id}")
     public void doDelete(@PathVariable Long id){
         subjectService.delete(id);
+    }
+
+    @GetMapping("/optional")
+    public List<SubjectOptionalProjos> getOptionalSubjects(){
+        return subjectService.getOptionalSubject();
     }
 
 

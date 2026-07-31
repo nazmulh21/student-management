@@ -27,33 +27,37 @@ public class LeaveManagementService {
 
     public LeaveRequestInfo createLeaveRequest(LeaveRequestInfo request) {
 
-
+            System.out.println("apply::"+request);
         // ১. শিক্ষক যে তারিখ সিলেক্ট করেছেন তার ব্যবধান থেকে মোট দিন হিসাব করা
         long totalAppliedDays = ChronoUnit.DAYS.between(request.getAppliedStartDate(), request.getAppliedEndDate()) + 1;
+        System.out.println("total apply days::"+totalAppliedDays);
         request.setAppliedTotalDays((double) totalAppliedDays);
 
         // ২. চলতি বছরের শুরুর তারিখ বের করা (যেমন: ২০২৬-০১-০১)
         int currentYear = request.getAppliedStartDate().getYear();
         LocalDate yearStart = LocalDate.of(currentYear, 1, 1);
 
-        // ৩. রিপোজিটরি থেকে এই বছরে ওই শিক্ষকের অলরেডি APPROVED হওয়া মোট ছুটির দিন নিয়ে আসা
+       /* // ৩. রিপোজিটরি থেকে এই বছরে ওই শিক্ষকের অলরেডি APPROVED হওয়া মোট ছুটির দিন নিয়ে আসা
         Double alreadyApprovedDays = leaveRequestRepository.getTotalApprovedDaysInYear(
                 request.getPersonnelInfo().getId(),
                 request.getLeaveTypeInfo().getId(),
                 yearStart
-        );
+        );*/
 
-        // প্রথমবার ছুটির আবেদন করলে null আসতে পারে, তাই ০.০ সেট করা
+        /*// প্রথমবার ছুটির আবেদন করলে null আসতে পারে, তাই ০.০ সেট করা
         if (alreadyApprovedDays == null) {
             alreadyApprovedDays = 0.0;
-        }
+        }*/
 
-        double maxAllowedDays = request.getLeaveTypeInfo().getAllowedDaysPerYear();
 
-        if ((alreadyApprovedDays + totalAppliedDays) > maxAllowedDays) {
-            double remainingBalance = maxAllowedDays - alreadyApprovedDays;
-            throw new IllegalArgumentException("দুঃখিত! আপনার ছুটির কোটা শেষ। এই ক্যাটাগরিতে আপনার আর মাত্র "
-                    + remainingBalance + " দিন ছুটি অবশিষ্ট আছে।");
+
+        Long personnelId = request.getPersonnelInfo().getId();
+        Optional<PersonnelLeaveBalanceInfo> balanceInfo = leaveBalanceService.findByPersonnelId(personnelId);
+        double remainingDaysValidation =balanceInfo.get().getSetRemainingForValidation();
+
+        if ((totalAppliedDays) > remainingDaysValidation) {
+            throw new IllegalArgumentException("Sorry, the number of application days exceeds your remaining days. "
+                    +"Your remaining days::"+ remainingDaysValidation );
         }
 
         // ৬. কোটা ঠিক থাকলে স্ট্যাটাস PENDING রেখে ডাটাবেজে সেভ করা
@@ -97,6 +101,7 @@ public class LeaveManagementService {
 
             // ব্যালেন্সে নতুন মান সেট করা
             balance.setRemainingDays(newRemainingDays);
+            balance.setSetRemainingForValidation(newRemainingDays);
             leaveBalanceService.updateLeaveBalance(balance); // অথবা আপনার ব্যালেন্স সেভ করার মেথড কল করবেন
         }
 

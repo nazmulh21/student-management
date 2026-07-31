@@ -9,11 +9,12 @@ import com.exam.school_management.enums.Status;
 import com.exam.school_management.group.model.GroupInfo;
 import com.exam.school_management.religion.model.ReligionInfo;
 import com.exam.school_management.students.dto.StudentProjos;
+import com.exam.school_management.students.service.FileUploadService;
+import com.exam.school_management.subjects.model.SubjectInfo;
 import com.exam.school_management.thana.model.ThanaInfo;
 import com.exam.school_management.union.model.UnionInfo;
 import com.exam.school_management.students.dto.StudentDTO;
 import com.exam.school_management.students.model.StudentInfo;
-import com.exam.school_management.students.service.FileUploadService;
 import com.exam.school_management.students.service.StudentService;
 
 import com.exam.school_management.user.user.model.CustomUserDetails;
@@ -42,6 +43,7 @@ public class StudentController {
     private final StudentService studentService;
     private final AdmissionService admissionService;
 
+
     public StudentController(StudentService studentService, AdmissionService admissionService) {
         this.studentService = studentService;
         this.admissionService = admissionService;
@@ -49,7 +51,7 @@ public class StudentController {
 
     @PostMapping("/save")
     public ResponseEntity<?> doSave(@ModelAttribute StudentDTO dto) throws IOException, ParseException {
-
+        System.out.println("stu data::"+dto);
         Long rollNo = dto.getRoll();
         Long classId = dto.getClassId();
         Long year = (long) YearMonth.now().getYear();
@@ -108,6 +110,9 @@ public class StudentController {
             if (dto.getGroupId() != null) {
                 entity.setGroupInfo(new GroupInfo(dto.getGroupId()));
             }
+            if (dto.getOptionalId() != null) {
+                entity.setSubjectInfo(new SubjectInfo(dto.getOptionalId()));
+            }
 
             if (dto.getReligionId() != null) {
                 entity.setReligionInfo(new ReligionInfo(dto.getReligionId()));
@@ -145,6 +150,8 @@ public class StudentController {
 
                 String uploadDir = "D:/projects/school_management/student-photos/" + entity.getStuUniqueId();
                 FileUploadService.saveFile(uploadDir, fileName, multipartFile);
+
+
 
                 Long admissionTest = Status.ADMISSION.getValue().longValue();
                 if(dto.getClassId().equals(admissionTest)){
@@ -219,6 +226,7 @@ public class StudentController {
             @RequestParam(value = "boardRegNo", required = false) String boardRegNo,
             @RequestParam(value = "birthRegNo", required = false) String birthRegNo,
             @RequestParam(value = "groupId", required = false) Long groupId,
+            @RequestParam(value = "optionalId", required = false) Long optionalId,
             @RequestParam(value = "religionId", required = false) Long religionId,
             @RequestParam(value = "scholarshipId", required = false) Long scholarshipId,
             @RequestParam(value = "tuitionFeesFacilities", required = false) BigDecimal tuitionFeesFacilities,
@@ -231,7 +239,7 @@ public class StudentController {
             StudentInfo updatedStudent = studentService.updateStudent(
                     uId, academicYear, image, studentName, stuDOB, father, fatherNID, mother, motherNID, mobile,
                     classId, roll, bloodId, districtId, thanaId, unionId, village,
-                    boardRegNo, birthRegNo,groupId,religionId, scholarshipId, tuitionFeesFacilities, isActive, guardianName, guardianMobile, guardianAddress
+                    boardRegNo, birthRegNo,groupId,optionalId,religionId, scholarshipId, tuitionFeesFacilities, isActive, guardianName, guardianMobile, guardianAddress
             );
             return new ResponseEntity<StudentInfo>(updatedStudent, HttpStatus.OK);
         } catch (RuntimeException e) {
@@ -299,10 +307,10 @@ public class StudentController {
         return studentService.getAllStudentByClassId(classId);
     }
 
-    @GetMapping("/list/{classId}/{groupId}")
-    public List<StudentInfo> getStudents(@PathVariable Long classId, @PathVariable Long groupId) {
+    @GetMapping("/list/{classId}/{groupId}/{year}")
+    public List<StudentInfo> getStudents(@PathVariable Long classId, @PathVariable Long groupId, @PathVariable Long year) {
         Long effectiveGroupId = (groupId == 0) ? null : groupId;
-        return studentService.findByClassAndGroup(classId, effectiveGroupId);
+        return studentService.findByClassAndGroup(classId, effectiveGroupId,year);
     }
 
     @GetMapping("/contact/{classParam}/{yearParam}")
@@ -318,5 +326,10 @@ public class StudentController {
 
         List<StudentProjos> list = studentService.getStudentContractList(parsedClass, parsedYear);
         return ResponseEntity.ok(list);
+    }
+
+    @GetMapping("/optional-list/{classId}/{optionalId}/{year}")
+    public List<StudentProjos> getStudentsByOptionalId(@PathVariable Long classId, @PathVariable Long optionalId, @PathVariable Long year){
+        return studentService.getStudentsByOptionalId(classId, optionalId, year);
     }
 }

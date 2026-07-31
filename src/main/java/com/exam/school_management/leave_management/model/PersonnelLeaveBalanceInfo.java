@@ -39,6 +39,9 @@ public class PersonnelLeaveBalanceInfo {
     @Column(name = "remaining_days")
     private Double remainingDays;
 
+    @Column(name = "set_remaining_for_validation")
+    private Double setRemainingForValidation;
+
     @Column(name = "allocate_by")
     private Long allocateBy;
 

@@ -1,5 +1,7 @@
 package com.exam.school_management.exam.class_subject_mark.service;
 
+import com.exam.school_management.enums.SubjectGroupStatus;
+import com.exam.school_management.exam.class_subject_mark.dto.ClassSubjectProjos;
 import com.exam.school_management.exam.class_subject_mark.model.ClassSubjectMarkInfo;
 import com.exam.school_management.exam.class_subject_mark.repo.ClassSubjectMarkRepo;
 import org.springframework.stereotype.Service;
@@ -28,12 +30,25 @@ public class ClassSubjectMarkService {
         return marksAssignSubjectRepo.findAll();
     }
 
-    public boolean existsByClassAndSubject(Long classId, Long subjectId) {
-        return marksAssignSubjectRepo.existsByClassInfoIdAndSubjectInfoId(classId, subjectId);
+    public boolean existsByClassAndSubject(Long classId,Long groupId, Long subjectId) {
+        return marksAssignSubjectRepo.existsByClassInfoIdAndGroupInfoIdAndSubjectInfoId(classId,groupId, subjectId);
     }
 
     public List<ClassSubjectMarkInfo> getByClassAndGroup(Long classId, Long groupId) {
         return marksAssignSubjectRepo.findByClassInfoIdAndGroupInfoId(classId, groupId);
+    }
+
+    public List<ClassSubjectProjos> getClassSubjectList(Long classId, Long groupId){
+      return marksAssignSubjectRepo.getClassSubjectList(classId,groupId);
+    }
+
+    public List<ClassSubjectProjos> getAllMandatorySubjects(Long classId){
+
+       return marksAssignSubjectRepo.getMandatorySubject(classId,SubjectGroupStatus.ALL_COMMON.getValue());
+    }
+
+    public List<ClassSubjectProjos> getAllGroupSubjects(Long groupId,Long classId){
+        return marksAssignSubjectRepo.getGroupSubject(groupId,classId);
     }
 
 }

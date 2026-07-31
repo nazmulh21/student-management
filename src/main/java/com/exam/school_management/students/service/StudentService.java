@@ -15,6 +15,8 @@ import com.exam.school_management.scholarship.model.ScholarshipInfo;
 import com.exam.school_management.scholarship.repo.ScholarshipRepo;
 import com.exam.school_management.students.dto.StudentProjos;
 import com.exam.school_management.students.repo.StudentRepo;
+import com.exam.school_management.subjects.model.SubjectInfo;
+import com.exam.school_management.subjects.repo.SubjectRepo;
 import com.exam.school_management.thana.model.ThanaInfo;
 import com.exam.school_management.thana.repo.ThanaRepo;
 import com.exam.school_management.union.model.UnionInfo;
@@ -49,11 +51,12 @@ public class StudentService {
     private final ScholarshipRepo scholarshipRepo;
     private final GroupRepo groupRepo;
     private final ReligionRepo religionRepo;
+    private final SubjectRepo subjectRepo;
 
     private final String UPLOAD_DIR = "D:/projects/school_management/student-photos/";
 
     public StudentService(StudentRepo studentRepo, ClassRepo classRepo,
-                          DistrictRepo districtRepo, ThanaRepo thanaRepo, UnionRepo unionRepo, BloodService bloodService, ScholarshipRepo scholarshipRepo, GroupRepo groupRepo, ReligionRepo religionRepo) {
+                          DistrictRepo districtRepo, ThanaRepo thanaRepo, UnionRepo unionRepo, BloodService bloodService, ScholarshipRepo scholarshipRepo, GroupRepo groupRepo, ReligionRepo religionRepo, SubjectRepo subjectRepo) {
         this.studentRepo = studentRepo;
         this.classRepo = classRepo;
         this.districtRepo = districtRepo;
@@ -63,6 +66,7 @@ public class StudentService {
         this.scholarshipRepo = scholarshipRepo;
         this.groupRepo = groupRepo;
         this.religionRepo = religionRepo;
+        this.subjectRepo = subjectRepo;
     }
 
     public ClassInfo getClassById(Long classId) {
@@ -99,7 +103,7 @@ public class StudentService {
                                      Long thanaCode,    // 🤝 Stays clean as Long
                                      Long unionCode,    // 🤝 Stays clean as Long
                                      String village, String boardRegNo,
-                                     String birthRegNo,Long groupId,Long religionId, Long scholarshipId, BigDecimal tuitionFeesFacilities,boolean isActive, String guardianName, String guardianMobile,
+                                     String birthRegNo,Long groupId,Long optionalId,Long religionId, Long scholarshipId, BigDecimal tuitionFeesFacilities,boolean isActive, String guardianName, String guardianMobile,
                                      String guardianAddress) throws RuntimeException, IOException {
         // 1. Verify that the targeting profile record exists
         StudentInfo existingStudent = studentRepo.findByStuUniqueIdAndAcademicYear(uId, academicYear);
@@ -149,6 +153,12 @@ public class StudentService {
             groupInfo = groupRepo.findById(groupId).orElse(null);
         }
 
+        SubjectInfo subjectInfo = null;
+        if (optionalId != null) {
+            subjectInfo = subjectRepo.findById(optionalId).orElse(null);
+        }
+
+
         ReligionInfo religionInfo = null;
         if (religionId != null) {
             religionInfo = religionRepo.findById(religionId).orElse(null);
@@ -175,6 +185,7 @@ public class StudentService {
         existingStudent.setBoardRegNo(boardRegNo);
         existingStudent.setBirthRegNo(birthRegNo);
         existingStudent.setGroupInfo(groupInfo);
+        existingStudent.setSubjectInfo(subjectInfo);
         existingStudent.setReligionInfo(religionInfo);
         existingStudent.setGuardianName(guardianName);
         existingStudent.setGuardianMobile(guardianMobile);
@@ -296,12 +307,16 @@ public class StudentService {
     }
 
 
-    public List<StudentInfo> findByClassAndGroup(Long classId, Long groupId){
-        return studentRepo.findByClassAndGroup(classId,groupId);
+    public List<StudentInfo> findByClassAndGroup(Long classId, Long groupId,Long year){
+        return studentRepo.findByClassAndGroup(classId,groupId,year);
     }
 
     public List<StudentProjos> getStudentContractList(Long classParam,Long yearParam){
        return studentRepo.getStudentContactlist(classParam,yearParam);
+    }
+
+    public List<StudentProjos> getStudentsByOptionalId(Long classId, Long optionalId, Long year){
+        return studentRepo.getStudentsByOptionalSubject(classId,optionalId,year);
     }
 
 }

@@ -14,6 +14,9 @@ public class SubjectInfo {
     @Column(name = "subject_name")
     private String subjectName;
 
+    @Column(name = "is_optional")
+    private Boolean isOptional;
+
     public SubjectInfo() {
     }
 

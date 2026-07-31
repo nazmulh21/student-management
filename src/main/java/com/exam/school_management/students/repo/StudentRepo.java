@@ -47,8 +47,8 @@ public interface StudentRepo extends JpaRepository<StudentInfo, Long> {
     List<StudentInfo>findAllByClassInfo_Id(Long classId);
 
 
-    @Query("SELECT s FROM StudentInfo s WHERE s.classInfo.id = :classId AND (:groupId IS NULL OR s.groupInfo.id = :groupId) ORDER BY s.roll ASC")
-    List<StudentInfo> findByClassAndGroup(@Param("classId") Long classId, @Param("groupId") Long groupId);
+    @Query("SELECT s FROM StudentInfo s WHERE s.classInfo.id = :classId AND (:groupId IS NULL OR s.groupInfo.id = :groupId) and s.academicYear =:year ORDER BY s.roll ASC")
+    List<StudentInfo> findByClassAndGroup(@Param("classId") Long classId, @Param("groupId") Long groupId, @Param("year") Long year);
 
 
     @Query("SELECT new com.exam.school_management.students.dto.StudentProjos(" +
@@ -67,4 +67,9 @@ public interface StudentRepo extends JpaRepository<StudentInfo, Long> {
             @Param("classId") Long classId,
             @Param("academicYear") Long academicYear
     );
+
+    @Query("select new com.exam.school_management.students.dto.StudentProjos(s.studentName, s.roll, s.groupInfo.groupName) from StudentInfo s where s.classInfo.id =:classId and s.subjectInfo.id = :optionalId and s.academicYear = :year")
+    List<StudentProjos> getStudentsByOptionalSubject(@Param("classId") Long classId,@Param("optionalId") Long optionalId, @Param("year") Long year);
+
+
 }

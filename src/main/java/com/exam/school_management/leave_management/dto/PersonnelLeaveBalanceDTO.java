@@ -9,4 +9,5 @@ public class PersonnelLeaveBalanceDTO {
     private Long leaveTypeId;
     private int year;
     private Double allocatedDays;
+
 }
