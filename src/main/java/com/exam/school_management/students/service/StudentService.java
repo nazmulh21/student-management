@@ -335,6 +335,7 @@ public class StudentService {
             entity.setMotherNID(findData.getMotherNID());
             entity.setMobile(findData.getMobile());
             entity.setAcademicYear(dto.getAcademicYear());
+            entity.setPromoteBy(dto.getPromoteClassId());
 
             if(findData.getBloodInfo() !=null && findData.getBloodInfo().getBloodId() !=null){
                 entity.setBloodInfo(new BloodInfo(findData.getBloodInfo().getBloodId()));

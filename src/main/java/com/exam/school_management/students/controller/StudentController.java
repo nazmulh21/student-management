@@ -92,6 +92,7 @@ public class StudentController {
             entity.setGuardianName(dto.getGuardianName());
             entity.setGuardianMobile(dto.getGuardianMobile());
             entity.setGuardianAddress(dto.getGuardianAddress());
+            entity.setInsBy(dto.getUserId());
 
             ClassInfo classInfo = new ClassInfo(dto.getClassId());
             entity.setClassInfo(classInfo);

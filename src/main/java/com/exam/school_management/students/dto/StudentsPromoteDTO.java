@@ -8,5 +8,6 @@ public class StudentsPromoteDTO {
     private Long promoteClassId;
     private Long newRoll;
     private Long academicYear;
+    private Long userId;
 
 }

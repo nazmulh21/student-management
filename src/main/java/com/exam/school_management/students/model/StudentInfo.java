@@ -121,13 +121,18 @@ public class StudentInfo {
     private BigDecimal tuitionFeesFacilities;
 
     @Column(name = "ins_by")
-    private String insBy;
+    private Long insBy;
 
     @Column(name = "ins_date")
     private Date insDate;
 
     @Column(name = "is_active")
     private Boolean isActive;
+
+    @Column(name = "promote_by")
+    private Long promoteBy;
+
+
 
 
     public StudentInfo() {
