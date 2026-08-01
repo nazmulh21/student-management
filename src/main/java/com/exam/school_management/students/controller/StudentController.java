@@ -9,6 +9,7 @@ import com.exam.school_management.enums.Status;
 import com.exam.school_management.group.model.GroupInfo;
 import com.exam.school_management.religion.model.ReligionInfo;
 import com.exam.school_management.students.dto.StudentProjos;
+import com.exam.school_management.students.dto.StudentsPromoteDTO;
 import com.exam.school_management.students.service.FileUploadService;
 import com.exam.school_management.subjects.model.SubjectInfo;
 import com.exam.school_management.thana.model.ThanaInfo;
@@ -331,5 +332,11 @@ public class StudentController {
     @GetMapping("/optional-list/{classId}/{optionalId}/{year}")
     public List<StudentProjos> getStudentsByOptionalId(@PathVariable Long classId, @PathVariable Long optionalId, @PathVariable Long year){
         return studentService.getStudentsByOptionalId(classId, optionalId, year);
+    }
+
+    @PostMapping("/promote")
+    public List<StudentInfo> studentPromote(@RequestBody List<StudentsPromoteDTO> dtos){
+        //System.out.println("promote stu::"+dtos);
+        return studentService.studentsPromote(dtos);
     }
 }

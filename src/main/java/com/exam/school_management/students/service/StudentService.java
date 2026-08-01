@@ -14,6 +14,7 @@ import com.exam.school_management.religion.repo.ReligionRepo;
 import com.exam.school_management.scholarship.model.ScholarshipInfo;
 import com.exam.school_management.scholarship.repo.ScholarshipRepo;
 import com.exam.school_management.students.dto.StudentProjos;
+import com.exam.school_management.students.dto.StudentsPromoteDTO;
 import com.exam.school_management.students.repo.StudentRepo;
 import com.exam.school_management.subjects.model.SubjectInfo;
 import com.exam.school_management.subjects.repo.SubjectRepo;
@@ -34,6 +35,7 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -319,4 +321,61 @@ public class StudentService {
         return studentRepo.getStudentsByOptionalSubject(classId,optionalId,year);
     }
 
+    public List<StudentInfo> studentsPromote(List<StudentsPromoteDTO> dtos){
+        List<StudentInfo> list = new ArrayList<>();
+        for (StudentsPromoteDTO dto : dtos){
+            StudentInfo entity = new StudentInfo();
+            StudentInfo findData = studentRepo.findById(dto.getId()).get();
+            entity.setStuUniqueId(findData.getStuUniqueId());
+            entity.setStudentName(findData.getStudentName());
+            entity.setStuDOB(findData.getStuDOB());
+            entity.setFather(findData.getFather());
+            entity.setFatherNID(findData.getFatherNID());
+            entity.setMother(findData.getMother());
+            entity.setMotherNID(findData.getMotherNID());
+            entity.setMobile(findData.getMobile());
+            entity.setAcademicYear(dto.getAcademicYear());
+
+            if(findData.getBloodInfo() !=null && findData.getBloodInfo().getBloodId() !=null){
+                entity.setBloodInfo(new BloodInfo(findData.getBloodInfo().getBloodId()));
+            }
+
+            if(findData.getReligionInfo() !=null && findData.getReligionInfo().getId() !=null){
+                entity.setReligionInfo(new ReligionInfo(findData.getReligionInfo().getId()));
+
+            }
+            entity.setBirthRegNo(findData.getBirthRegNo());
+            entity.setDistrictInfo(new DistrictInfo(findData.getDistrictInfo().getDistrictCode()));
+            entity.setThanaInfo(new ThanaInfo(findData.getThanaInfo().getThanaCode()));
+            entity.setUnionInfo(new UnionInfo(findData.getUnionInfo().getUnionCode()));
+            entity.setVillage(findData.getVillage());
+            if (dto.getPromoteClassId() !=null){
+                entity.setClassInfo(new ClassInfo(dto.getPromoteClassId()));
+            }
+
+            if(findData.getGroupInfo() !=null && findData.getGroupInfo().getId() !=null){
+                entity.setGroupInfo(new GroupInfo(findData.getGroupInfo().getId()));
+            }
+
+            if(findData.getSubjectInfo() !=null && findData.getSubjectInfo().getId() !=null) {
+                entity.setSubjectInfo(new SubjectInfo(findData.getSubjectInfo().getId()));
+            }
+            entity.setRoll(dto.getNewRoll());
+            entity.setBoardRegNo(findData.getBoardRegNo());
+
+            // FIXED NULL CHECK HERE
+            if(findData.getScholarshipInfo() != null && findData.getScholarshipInfo().getScholarshipId() != null){
+                entity.setScholarshipInfo(new ScholarshipInfo(findData.getScholarshipInfo().getScholarshipId()));
+            }
+
+            entity.setTuitionFeesFacilities(findData.getTuitionFeesFacilities());
+            entity.setIsActive(findData.getIsActive());
+            entity.setGuardianName(findData.getGuardianName());
+            entity.setGuardianMobile(findData.getGuardianMobile());
+            entity.setGuardianAddress(findData.getGuardianAddress());
+            entity.setFileName(findData.getFileName());
+            list.add(entity);
+        }
+        return studentRepo.saveAll(list);
+    }
 }
