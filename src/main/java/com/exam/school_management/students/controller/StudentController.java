@@ -336,8 +336,20 @@ public class StudentController {
     }
 
     @PostMapping("/promote")
-    public List<StudentInfo> studentPromote(@RequestBody List<StudentsPromoteDTO> dtos){
-        //System.out.println("promote stu::"+dtos);
-        return studentService.studentsPromote(dtos);
+    public ResponseEntity<?> studentPromote(@RequestBody List<StudentsPromoteDTO> dtos) {
+        try {
+            List<StudentInfo> promotedStudents = studentService.studentsPromote(dtos);
+            return ResponseEntity.ok(promotedStudents);
+        } catch (DataIntegrityViolationException ex) {
+            if (ex.getMessage() != null && (ex.getMessage().contains("uk6t2qjbx7s3a3vgo6869p2xwmx") || ex.getMessage().contains("already exists"))) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body("এই ক্লাস, রোল এবং শিক্ষাবর্ষের রেকর্ড ইতিমধ্যে ডাটাবেজে সংরক্ষিত আছে।");
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("ডাটা সেভ করতে গিয়ে একটি সমস্যা হয়েছে।");
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Server problem: " + ex.getMessage());
+        }
     }
 }

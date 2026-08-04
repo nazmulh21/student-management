@@ -16,7 +16,10 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.util.Date;
 
-@Table(name = "student_info")
+@Table(name = "student_info",uniqueConstraints = {
+        // Or for multiple columns (composite unique key):
+         @UniqueConstraint(columnNames = {"class_id", "roll_no","academic_year"})
+})
 @Entity
 @Data
 public class StudentInfo {

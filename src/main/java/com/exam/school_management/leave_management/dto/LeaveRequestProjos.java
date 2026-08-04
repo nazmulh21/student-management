@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime; // Import LocalDateTime
+import java.time.LocalDate; // Import LocalDateTime
 
 @Data
 @NoArgsConstructor
@@ -18,7 +18,7 @@ public class LeaveRequestProjos {
     private String leaveTypeName;
     private String reason;
     private LocalDate startDate;
-    private LocalDateTime appliedDate; // Changed from LocalDate to LocalDateTime
+    private LocalDate appliedEndDate;
     private Double appliedTotalDays;
     private Double approvedTotalDays;
     private LeaveStatus status;

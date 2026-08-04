@@ -46,7 +46,7 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequestInfo,L
             "p.leaveTypeInfo.leaveTypeName, " +
             "p.reason, " +
             "p.appliedStartDate, " +
-            "p.appliedDate, " +
+            "p.appliedEndDate, " +
             "p.appliedTotalDays, " +
             "p.approvedTotalDays, " +
             "p.status, " +
