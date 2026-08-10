@@ -23,12 +23,8 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequestInfo,L
             @Param("personnelId") Long personnelId,
             @Param("targetDate") LocalDate targetDate
     );
-
-    /**
-     * ২. প্রধান শিক্ষকের ড্যাশবোর্ডের জন্য:
-     * সমস্ত পেন্ডিং (PENDING) আবেদনের তালিকা দেখা, যাতে তিনি অনুমোদন বা সংশোধন করতে পারেন।
-     */
     List<LeaveRequestInfo> findByStatus(LeaveStatus status);
+
 
     @Query("SELECT l FROM LeaveRequestInfo l WHERE l.status = 'PENDING' AND l.forwardTo = :forwardTo")
     List<LeaveRequestInfo> findAllPendingRequests(@Param("forwardTo") Long forwardTo);
@@ -40,6 +36,7 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequestInfo,L
     List<LeaveRequestInfo> findByPersonnelInfoIdOrderByAppliedDateDesc(Long personnelId);//
 
     @Query("SELECT new com.exam.school_management.leave_management.dto.LeaveRequestProjos(" +
+            "p.id, " +
             "p.personnelInfo.name, " +
             "p.personnelInfo.designationInfo.designation, " +
             "p.personnelInfo.index, " +
@@ -76,4 +73,6 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequestInfo,L
             @Param("leaveTypeId") Long leaveTypeId,
             @Param("yearStart") LocalDate yearStart
     );
+
+    List<LeaveRequestInfo> findByPersonnelInfoIdAndStatus(Long personnelInfoId, LeaveStatus status);
 }

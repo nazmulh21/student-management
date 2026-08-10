@@ -12,6 +12,7 @@ import java.time.LocalDate; // Import LocalDateTime
 @NoArgsConstructor
 @AllArgsConstructor
 public class LeaveRequestProjos {
+    private Long id;
     private String personnelName;
     private String designation;
     private String index;

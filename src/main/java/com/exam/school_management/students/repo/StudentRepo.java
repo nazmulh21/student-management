@@ -68,7 +68,7 @@ public interface StudentRepo extends JpaRepository<StudentInfo, Long> {
             @Param("academicYear") Long academicYear
     );
 
-    @Query("select new com.exam.school_management.students.dto.StudentProjos(s.studentName, s.roll, s.groupInfo.groupName) from StudentInfo s where s.classInfo.id =:classId and s.subjectInfo.id = :optionalId and s.academicYear = :year")
+    @Query("select new com.exam.school_management.students.dto.StudentProjos(s.studentName, s.roll, s.groupInfo.groupName) from StudentInfo s where s.classInfo.id =:classId and s.subjectInfo.id = :optionalId and s.academicYear = :year order by s.roll asc ")
     List<StudentProjos> getStudentsByOptionalSubject(@Param("classId") Long classId,@Param("optionalId") Long optionalId, @Param("year") Long year);
 
 

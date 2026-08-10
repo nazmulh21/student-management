@@ -59,11 +59,20 @@ public class LeaveRequestInfo {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private LeaveStatus status = LeaveStatus.PENDING;
+    private LeaveStatus status;
 
     @Column(name = "applied_date", nullable = false)
     private LocalDateTime appliedDate = LocalDateTime.now();
 
     @Column(name = "approved_by")
     private Long approvedBy;
+
+    @Column(name = "sent_back_by")
+     private Long sentBackBy;
+
+
+
+    public LeaveRequestInfo(Long id) {
+        this.id = id;
+    }
 }

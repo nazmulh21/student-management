@@ -1,8 +1,10 @@
 package com.exam.school_management.leave_management.service;
 
 import com.exam.school_management.leave_management.dto.LeaveRequestProjos;
+import com.exam.school_management.leave_management.model.LeaveRequestHistoryInfo;
 import com.exam.school_management.leave_management.model.LeaveRequestInfo;
 import com.exam.school_management.leave_management.model.PersonnelLeaveBalanceInfo;
+import com.exam.school_management.leave_management.repo.LeaveRequestHistoryRepo;
 import com.exam.school_management.leave_management.repo.LeaveRequestRepository;
 import com.exam.school_management.enums.LeaveStatus;
 import org.springframework.stereotype.Service;
@@ -17,20 +19,22 @@ public class LeaveManagementService {
 
    private final LeaveRequestRepository leaveRequestRepository;
    private final LeaveBalanceService leaveBalanceService;
+   private final LeaveRequestHistoryRepo historyRepo;
 
-    public LeaveManagementService(LeaveRequestRepository leaveRequestRepository, LeaveBalanceService leaveBalanceService) {
+    public LeaveManagementService(LeaveRequestRepository leaveRequestRepository, LeaveBalanceService leaveBalanceService, LeaveRequestHistoryRepo historyRepo) {
         this.leaveRequestRepository = leaveRequestRepository;
         this.leaveBalanceService = leaveBalanceService;
+        this.historyRepo = historyRepo;
     }
     // LeaveManagementService ক্লাসের ভেতরে এই মেথডটি যুক্ত করুন:
 
 
-    public LeaveRequestInfo createLeaveRequest(LeaveRequestInfo request) {
+    public LeaveRequestInfo createLeaveRequest(LeaveRequestInfo request,String fullName,String forwardSelectedName) {
 
-            System.out.println("apply::"+request);
+           // System.out.println("apply::"+request);
         // ১. শিক্ষক যে তারিখ সিলেক্ট করেছেন তার ব্যবধান থেকে মোট দিন হিসাব করা
         long totalAppliedDays = ChronoUnit.DAYS.between(request.getAppliedStartDate(), request.getAppliedEndDate()) + 1;
-        System.out.println("total apply days::"+totalAppliedDays);
+        //.out.println("total apply days::"+totalAppliedDays);
         request.setAppliedTotalDays((double) totalAppliedDays);
 
         // ২. চলতি বছরের শুরুর তারিখ বের করা (যেমন: ২০২৬-০১-০১)
@@ -61,8 +65,28 @@ public class LeaveManagementService {
         }
 
         // ৬. কোটা ঠিক থাকলে স্ট্যাটাস PENDING রেখে ডাটাবেজে সেভ করা
-        request.setStatus(LeaveStatus.PENDING);
-        return leaveRequestRepository.save(request);
+        if (request.getStatus() !=null){
+            request.setStatus(request.getStatus());
+        }else {
+            request.setStatus(LeaveStatus.PENDING);
+        }
+        LeaveRequestInfo req=leaveRequestRepository.save(request);
+        System.out.println("req by"+req);
+
+        LeaveRequestHistoryInfo history=new LeaveRequestHistoryInfo();
+
+        history.setCreateOrUpdateBy(fullName);
+        history.setLeaveRequestInfo(new LeaveRequestInfo(req.getId()));
+        history.setCreateDate(LocalDate.now());
+        history.setStatus("Pending");
+        history.setForwardTo(forwardSelectedName);
+        historyRepo.save(history);
+
+
+
+        return req;
+
+
     }
 
 
@@ -122,4 +146,18 @@ public class LeaveManagementService {
     public List<LeaveRequestProjos> getLeaveRequestList(Long id){
         return leaveRequestRepository.leaveRequestList(id);
     }
+
+    public LeaveRequestInfo findById(Long id){
+        return leaveRequestRepository.findById(id).get();
+    }
+
+    public List<LeaveRequestInfo> getSentbackList(Long personnelId){
+        return leaveRequestRepository.findByPersonnelInfoIdAndStatus(personnelId,LeaveStatus.SENT_BACK);
+    }
+
+
+    public LeaveRequestInfo updated(LeaveRequestInfo leaveRequestInfo){
+        return leaveRequestRepository.save(leaveRequestInfo);
+    }
+
 }
