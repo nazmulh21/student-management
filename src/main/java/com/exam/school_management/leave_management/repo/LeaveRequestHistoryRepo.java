@@ -11,6 +11,6 @@ import java.util.List;
 @Repository
 public interface LeaveRequestHistoryRepo extends JpaRepository<LeaveRequestHistoryInfo,Long> {
 
-    @Query("SELECT h FROM LeaveRequestHistoryInfo h WHERE h.leaveRequestInfo.id = :leaveId order by h.createDate desc ")
+    @Query("SELECT h FROM LeaveRequestHistoryInfo h WHERE h.leaveRequestInfo.id = :leaveId ORDER BY h.id DESC")
     List<LeaveRequestHistoryInfo> findAllWhereLeaveRequestInfoId(@Param("leaveId") Long leaveId);
 }

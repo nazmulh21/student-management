@@ -10,6 +10,7 @@ import com.exam.school_management.enums.LeaveStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
@@ -64,29 +65,27 @@ public class LeaveManagementService {
                     +"Your remaining days::"+ remainingDaysValidation );
         }
 
-        // ৬. কোটা ঠিক থাকলে স্ট্যাটাস PENDING রেখে ডাটাবেজে সেভ করা
-        if (request.getStatus() !=null){
-            request.setStatus(request.getStatus());
-        }else {
-            request.setStatus(LeaveStatus.PENDING);
-        }
+        request.setStatus(LeaveStatus.PENDING);
         LeaveRequestInfo req=leaveRequestRepository.save(request);
         System.out.println("req by"+req);
 
+
         LeaveRequestHistoryInfo history=new LeaveRequestHistoryInfo();
-
-        history.setCreateOrUpdateBy(fullName);
+        history.setCreateOrUpdateBy("Created By: "+fullName);
         history.setLeaveRequestInfo(new LeaveRequestInfo(req.getId()));
-        history.setCreateDate(LocalDate.now());
-        history.setStatus("Pending");
-        history.setForwardTo(forwardSelectedName);
+        history.setCreateDate(LocalDateTime.now());
+        history.setStatus("Sent");
+        history.setForwardTo("Forward to: "+forwardSelectedName);
         historyRepo.save(history);
-
-
 
         return req;
 
+    }
 
+
+    public LeaveRequestInfo sentBack(LeaveRequestInfo requestInfo){
+
+        return leaveRequestRepository.save(requestInfo);
     }
 
 
@@ -95,7 +94,10 @@ public class LeaveManagementService {
             Long requestId,
             LocalDate headMasterStartDate,
             LocalDate headMasterEndDate,
-            Long headMasterId) {
+            Long headMasterId,
+            String fullName,
+            String designation
+    ) {
 
         // ১. ডাটাবেজ থেকে রিকোয়েস্টটি বের করা
         LeaveRequestInfo request = leaveRequestRepository.findById(requestId)
@@ -135,8 +137,17 @@ public class LeaveManagementService {
         request.setApprovedTotalDays((double) calculatedApprovedDays);
         request.setStatus(LeaveStatus.APPROVED);
         request.setApprovedBy(headMasterId);
+        LeaveRequestInfo req=leaveRequestRepository.save(request);
 
-        return leaveRequestRepository.save(request);
+        LeaveRequestHistoryInfo historyInfo=new LeaveRequestHistoryInfo();
+        historyInfo.setLeaveRequestInfo(new LeaveRequestInfo(requestId));
+        historyInfo.setStatus("Approved");
+        historyInfo.setCreateDate(LocalDateTime.now());
+        historyInfo.setCreateOrUpdateBy("Solved by::"+fullName+"-"+designation);
+        historyInfo.setForwardTo("Approved");
+        historyRepo.save(historyInfo);
+
+        return req;
     }
 
     public List<LeaveRequestInfo> getPendingLeaveRequest(Long forwardTo){

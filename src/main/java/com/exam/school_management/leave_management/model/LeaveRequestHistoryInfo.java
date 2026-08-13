@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Table(name = "leave_request_history")
 @Data
@@ -21,7 +22,7 @@ public class LeaveRequestHistoryInfo {
     private String createOrUpdateBy;
 
     @Column(name = "date")
-    private LocalDate createDate;
+    private LocalDateTime createDate;
 
     @Column(name = "comments")
     private String comments;

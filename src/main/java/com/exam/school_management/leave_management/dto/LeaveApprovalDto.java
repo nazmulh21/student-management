@@ -8,4 +8,7 @@ public class LeaveApprovalDto {
     private LocalDate approvedStartDate;
     private LocalDate approvedEndDate;
     private Long headMasterId;
+    private String fullName;
+    private String designation;
+    private String comments;
 }

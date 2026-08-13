@@ -99,6 +99,7 @@ public class UserController {
         responseBody.put("username", user.getUsername());
         responseBody.put("roles", roles);
         responseBody.put("fullName", user.getPersonnelInfo() != null ? user.getPersonnelInfo().getName() : "Name Not Found");
+        responseBody.put("designation",user.getPersonnelInfo().getDesignationInfo().getDesignation());
         responseBody.put("lastLoginTime", lastLoginTimeFromDb);
 
         return ResponseEntity.ok(responseBody);

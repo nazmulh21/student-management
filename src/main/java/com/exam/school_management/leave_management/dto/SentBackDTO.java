@@ -8,6 +8,9 @@ import lombok.NoArgsConstructor;
 public class SentBackDTO {
     private Long headMasterId;
     private Long applicantId;
+    private String applicantName;
     private Long requestId;
     private String sentBackReason;
+    private String headFullName;
+    private String designation;
 }

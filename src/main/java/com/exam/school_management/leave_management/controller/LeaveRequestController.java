@@ -1,22 +1,23 @@
 package com.exam.school_management.leave_management.controller;
 
 import com.exam.school_management.enums.LeaveStatus;
-import com.exam.school_management.enums.Status;
 import com.exam.school_management.leave_management.dto.LeaveRequestProjos;
 import com.exam.school_management.leave_management.dto.SentBackDTO;
 import com.exam.school_management.leave_management.dto.SentBackUpdateDTO;
+import com.exam.school_management.leave_management.model.LeaveRequestHistoryInfo;
 import com.exam.school_management.leave_management.model.LeaveRequestInfo;
 import com.exam.school_management.leave_management.model.LeaveTypeInfo;
 import com.exam.school_management.leave_management.service.LeaveManagementService;
 import com.exam.school_management.leave_management.dto.LeaveApprovalDto;
+import com.exam.school_management.leave_management.service.LeaveRequestHistoryService;
 import com.exam.school_management.personnel.model.PersonnelInfo;
-import com.exam.school_management.user.user.model.CustomUserDetails;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -24,9 +25,11 @@ import java.util.List;
 public class LeaveRequestController {
 
     private final LeaveManagementService leaveManagementService;
+    private final LeaveRequestHistoryService historyService;
 
-    public LeaveRequestController(LeaveManagementService leaveManagementService) {
+    public LeaveRequestController(LeaveManagementService leaveManagementService, LeaveRequestHistoryService historyService) {
         this.leaveManagementService = leaveManagementService;
+        this.historyService = historyService;
     }
 
     /**
@@ -59,7 +62,9 @@ public class LeaveRequestController {
                     requestId,
                     approvalDto.getApprovedStartDate(),
                     approvalDto.getApprovedEndDate(),
-                    approvalDto.getHeadMasterId()
+                    approvalDto.getHeadMasterId(),
+                    approvalDto.getFullName(),
+                    approvalDto.getDesignation()
             );
             return ResponseEntity.ok(approvedRequest);
         } catch (IllegalArgumentException e) {
@@ -104,7 +109,16 @@ public class LeaveRequestController {
         leaveRequestInfo.setStatus(LeaveStatus.SENT_BACK);
 
         // 3. Save/Update the entity
-        LeaveRequestInfo updatedLeaveRequest = leaveManagementService.createLeaveRequest(leaveRequestInfo,"","");
+        LeaveRequestInfo updatedLeaveRequest = leaveManagementService.sentBack(leaveRequestInfo);
+
+        LeaveRequestHistoryInfo historyInfo=new LeaveRequestHistoryInfo();
+        historyInfo.setCreateDate(LocalDateTime.now());
+        historyInfo.setCreateOrUpdateBy("Sent Back By: "+dto.getHeadFullName()+"-"+dto.getDesignation());
+        historyInfo.setComments(dto.getSentBackReason());
+        historyInfo.setLeaveRequestInfo(new LeaveRequestInfo(dto.getRequestId()));
+        historyInfo.setStatus("Sent Back");
+        historyInfo.setForwardTo("Sent Back to:"+dto.getApplicantName());
+        historyService.save(historyInfo);
 
         return ResponseEntity.ok(updatedLeaveRequest);
     }
@@ -117,20 +131,24 @@ public class LeaveRequestController {
 
     @GetMapping("/view/{id}")
     public LeaveRequestInfo findById(@PathVariable Long id){
-        System.out.println("id"+id);
+        //System.out.println("id"+id);
         return leaveManagementService.findById(id);
     }
 
     @PutMapping("/update/{requestId}")
     public ResponseEntity<?> update(@RequestBody SentBackUpdateDTO updateData, @PathVariable Long requestId) {
         LeaveRequestInfo findData = leaveManagementService.findById(requestId);
-        //System.out.println("findout data::"+findData);
+        System.out.println("findout data::"+findData);
         //System.out.println("updateData::"+updateData);
 
         if (findData == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Leave request not found with ID: " + requestId);
         }
+
+        // Save the name *before* overwriting personnelInfo
+        String personnelName = (findData.getPersonnelInfo() != null) ? findData.getPersonnelInfo().getName() : null;
+        String designation=findData.getPersonnelInfo().getDesignationInfo().getDesignation();
 
         findData.setPersonnelInfo(new PersonnelInfo(updateData.getPersonnelId()));
         findData.setReason(updateData.getReason());
@@ -142,8 +160,16 @@ public class LeaveRequestController {
         findData.setAppliedEndDate(updateData.getAppliedEndDate());
         findData.setAppliedTotalDays(updateData.getAppliedTotalDays());
         findData.setStatus(LeaveStatus.PENDING);
-
         LeaveRequestInfo updatedData = leaveManagementService.updated(findData);
+
+        LeaveRequestHistoryInfo historyInfo=new LeaveRequestHistoryInfo();
+        historyInfo.setLeaveRequestInfo(new LeaveRequestInfo(requestId));
+        historyInfo.setCreateOrUpdateBy("Updated By::"+personnelName+"-"+designation);
+        historyInfo.setComments(updateData.getComments());
+        historyInfo.setStatus("Sent");
+        historyInfo.setCreateDate(LocalDateTime.now());
+        historyInfo.setForwardTo("Forward To:"+updateData.getForwardName());
+        historyService.save(historyInfo);
 
         return ResponseEntity.ok(updatedData);
     }
