@@ -2,11 +2,13 @@ package com.exam.school_management.leave_management.model;
 
 import com.exam.school_management.enums.LeaveStatus;
 import com.exam.school_management.personnel.model.PersonnelInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString; // এটি ইম্পোর্ট করুন
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -31,6 +33,12 @@ public class LeaveRequestInfo {
     @JoinColumn(name = "leave_type_id", nullable = false)
     private LeaveTypeInfo leaveTypeInfo;
 
+    // এক আবেদনে একাধিক ইমেজ থাকতে পারে (One-to-Many)
+    @OneToMany(mappedBy = "leaveRequestInfo", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    @JsonIgnore // জ্যাকসন JSON বানানোর সময় এই ফিল্ডটি ইগনোর করবে
+    private java.util.List<LeaveRequestImage> images;
+
     @Column(name = "forward_to")
     private Long forwardTo;
 
@@ -44,7 +52,7 @@ public class LeaveRequestInfo {
     @Column(name = "applied_total_days", nullable = false)
     private Double appliedTotalDays;
 
-    // --- প্রধান শিক্ষকের মঞ্জুর করা তারিখ (অনুমোদনের সময় বসবে) ---
+    // --- প্রধান শিক্ষকের মঞ্জুর করা তারিখ (অনুমোদনের সময় বসবে) ---
     @Column(name = "approved_start_date")
     private LocalDate approvedStartDate;
 
@@ -68,9 +76,7 @@ public class LeaveRequestInfo {
     private Long approvedBy;
 
     @Column(name = "sent_back_by")
-     private Long sentBackBy;
-
-
+    private Long sentBackBy;
 
     public LeaveRequestInfo(Long id) {
         this.id = id;

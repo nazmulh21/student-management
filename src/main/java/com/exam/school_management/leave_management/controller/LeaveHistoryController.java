@@ -21,6 +21,8 @@ public class LeaveHistoryController {
 
     @GetMapping(value = "/list/{leaveId}",produces = MediaType.APPLICATION_JSON_VALUE)
     public List<LeaveRequestHistoryInfo> getList(@PathVariable Long leaveId){
-        return leaveRequestHistoryService.historyList(leaveId);
+        List<LeaveRequestHistoryInfo> list=leaveRequestHistoryService.historyList(leaveId);
+        //System.out.println("List"+list);
+        return list;
     }
 }

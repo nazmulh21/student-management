@@ -2,13 +2,17 @@ package com.exam.school_management.leave_management.service;
 
 import com.exam.school_management.leave_management.dto.LeaveRequestProjos;
 import com.exam.school_management.leave_management.model.LeaveRequestHistoryInfo;
+import com.exam.school_management.leave_management.model.LeaveRequestImage;
 import com.exam.school_management.leave_management.model.LeaveRequestInfo;
 import com.exam.school_management.leave_management.model.PersonnelLeaveBalanceInfo;
 import com.exam.school_management.leave_management.repo.LeaveRequestHistoryRepo;
+import com.exam.school_management.leave_management.repo.LeaveRequestImageRepo;
 import com.exam.school_management.leave_management.repo.LeaveRequestRepository;
 import com.exam.school_management.enums.LeaveStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -21,67 +25,86 @@ public class LeaveManagementService {
    private final LeaveRequestRepository leaveRequestRepository;
    private final LeaveBalanceService leaveBalanceService;
    private final LeaveRequestHistoryRepo historyRepo;
+   private final LeaveRequestImageRepo leaveRequestImageRepo;
 
-    public LeaveManagementService(LeaveRequestRepository leaveRequestRepository, LeaveBalanceService leaveBalanceService, LeaveRequestHistoryRepo historyRepo) {
+    public LeaveManagementService(LeaveRequestRepository leaveRequestRepository, LeaveBalanceService leaveBalanceService, LeaveRequestHistoryRepo historyRepo, LeaveRequestImageRepo leaveRequestImageRepo) {
         this.leaveRequestRepository = leaveRequestRepository;
         this.leaveBalanceService = leaveBalanceService;
         this.historyRepo = historyRepo;
+        this.leaveRequestImageRepo = leaveRequestImageRepo;
     }
     // LeaveManagementService ক্লাসের ভেতরে এই মেথডটি যুক্ত করুন:
 
 
-    public LeaveRequestInfo createLeaveRequest(LeaveRequestInfo request,String fullName,String forwardSelectedName) {
+    public LeaveRequestInfo createLeaveRequest(LeaveRequestInfo request, String fullName, String forwardSelectedName, List<MultipartFile> images) {
 
-           // System.out.println("apply::"+request);
         // ১. শিক্ষক যে তারিখ সিলেক্ট করেছেন তার ব্যবধান থেকে মোট দিন হিসাব করা
         long totalAppliedDays = ChronoUnit.DAYS.between(request.getAppliedStartDate(), request.getAppliedEndDate()) + 1;
-        //.out.println("total apply days::"+totalAppliedDays);
         request.setAppliedTotalDays((double) totalAppliedDays);
 
-        // ২. চলতি বছরের শুরুর তারিখ বের করা (যেমন: ২০২৬-০১-০১)
+        // ২. চলতি বছরের শুরুর তারিখ বের করা
         int currentYear = request.getAppliedStartDate().getYear();
         LocalDate yearStart = LocalDate.of(currentYear, 1, 1);
 
-       /* // ৩. রিপোজিটরি থেকে এই বছরে ওই শিক্ষকের অলরেডি APPROVED হওয়া মোট ছুটির দিন নিয়ে আসা
-        Double alreadyApprovedDays = leaveRequestRepository.getTotalApprovedDaysInYear(
-                request.getPersonnelInfo().getId(),
-                request.getLeaveTypeInfo().getId(),
-                yearStart
-        );*/
-
-        /*// প্রথমবার ছুটির আবেদন করলে null আসতে পারে, তাই ০.০ সেট করা
-        if (alreadyApprovedDays == null) {
-            alreadyApprovedDays = 0.0;
-        }*/
-
-
-
         Long personnelId = request.getPersonnelInfo().getId();
         Optional<PersonnelLeaveBalanceInfo> balanceInfo = leaveBalanceService.findByPersonnelId(personnelId);
-        double remainingDaysValidation =balanceInfo.get().getSetRemainingForValidation();
 
-        if ((totalAppliedDays) > remainingDaysValidation) {
-            throw new IllegalArgumentException("Sorry, the number of application days exceeds your remaining days. "
-                    +"Your remaining days::"+ remainingDaysValidation );
+        if (balanceInfo.isPresent()) {
+            double remainingDaysValidation = balanceInfo.get().getSetRemainingForValidation();
+
+            if ((totalAppliedDays) > remainingDaysValidation) {
+                throw new IllegalArgumentException("Sorry, the number of application days exceeds your remaining days. "
+                        + "Your remaining days::" + remainingDaysValidation);
+            }
         }
 
         request.setStatus(LeaveStatus.PENDING);
-        LeaveRequestInfo req=leaveRequestRepository.save(request);
-        System.out.println("req by"+req);
 
+        // প্রথমে মূল রিকোয়েস্ট সেভ করে আইডি জেনারেট করা
+        LeaveRequestInfo req = leaveRequestRepository.save(request);
 
-        LeaveRequestHistoryInfo history=new LeaveRequestHistoryInfo();
-        history.setCreateOrUpdateBy("Created By: "+fullName);
-        history.setLeaveRequestInfo(new LeaveRequestInfo(req.getId()));
+        // ৩. ইমেজ ফাইলগুলো সরাসরি ডাটাবেজে সেভ করার লজিক (byte[] আকারে)
+        if (images != null && !images.isEmpty()) {
+            List<LeaveRequestImage> imageList = new java.util.ArrayList<>();
+
+            for (MultipartFile file : images) {
+                System.out.println("image::"+file);
+                if (file != null && !file.isEmpty()) {
+                    try {
+                        LeaveRequestImage imgEntity = new LeaveRequestImage();
+                        imgEntity.setImageName(file.getOriginalFilename());
+
+                        // ফাইলকে বাইনারি বা byte[] এ রূপান্তর করে সরাসরি এন্টিটিতে সেট করা
+                        imgEntity.setImageData(file.getBytes());
+
+                        // এখানে সরাসরি `req` অবজেক্ট পাস করা হলো (আইডি কন্সট্রাক্টর নিয়ে ঝামেলা এড়াতে)
+                        imgEntity.setLeaveRequestInfo(req);
+                        imageList.add(imgEntity);
+
+                    } catch (Exception e) {
+                        System.err.println("Failed to read image bytes: " + e.getMessage());
+                    }
+                }
+            }
+
+            // ডাটাবেজে ইমেজগুলো সেভ করা
+            if (!imageList.isEmpty()) {
+                leaveRequestImageRepo.saveAll(imageList);
+                req.setImages(imageList);
+            }
+        }
+
+        // ৪. হিস্ট্রি সেভ করা
+        LeaveRequestHistoryInfo history = new LeaveRequestHistoryInfo();
+        history.setCreateOrUpdateBy("Created By: " + fullName);
+        history.setLeaveRequestInfo(req); // এখানেও `req` ব্যবহার করা হলো
         history.setCreateDate(LocalDateTime.now());
         history.setStatus("Sent");
-        history.setForwardTo("Forward to: "+forwardSelectedName);
+        history.setForwardTo("Forward to: " + forwardSelectedName);
         historyRepo.save(history);
 
         return req;
-
     }
-
 
     public LeaveRequestInfo sentBack(LeaveRequestInfo requestInfo){
 

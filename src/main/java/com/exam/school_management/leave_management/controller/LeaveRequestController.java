@@ -1,24 +1,32 @@
 package com.exam.school_management.leave_management.controller;
 
 import com.exam.school_management.enums.LeaveStatus;
+import com.exam.school_management.enums.Status;
 import com.exam.school_management.leave_management.dto.LeaveRequestProjos;
 import com.exam.school_management.leave_management.dto.SentBackDTO;
-import com.exam.school_management.leave_management.dto.SentBackUpdateDTO;
 import com.exam.school_management.leave_management.model.LeaveRequestHistoryInfo;
+import com.exam.school_management.leave_management.model.LeaveRequestImage;
 import com.exam.school_management.leave_management.model.LeaveRequestInfo;
 import com.exam.school_management.leave_management.model.LeaveTypeInfo;
 import com.exam.school_management.leave_management.service.LeaveManagementService;
 import com.exam.school_management.leave_management.dto.LeaveApprovalDto;
 import com.exam.school_management.leave_management.service.LeaveRequestHistoryService;
+import com.exam.school_management.leave_management.service.LeaveRequestImageService;
 import com.exam.school_management.personnel.model.PersonnelInfo;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/leave-requests")
@@ -26,29 +34,28 @@ public class LeaveRequestController {
 
     private final LeaveManagementService leaveManagementService;
     private final LeaveRequestHistoryService historyService;
+    private final LeaveRequestImageService leaveRequestImageService;
 
-    public LeaveRequestController(LeaveManagementService leaveManagementService, LeaveRequestHistoryService historyService) {
+    public LeaveRequestController(LeaveManagementService leaveManagementService, LeaveRequestHistoryService historyService, LeaveRequestImageService leaveRequestImageService) {
         this.leaveManagementService = leaveManagementService;
         this.historyService = historyService;
+        this.leaveRequestImageService = leaveRequestImageService;
     }
 
     /**
      * ১. শিক্ষকের ছুটির আবেদন সাবমিট করার এপিআই
      * URL: POST http://localhost:8080/api/leave-requests/apply
      */
-    @PostMapping("/apply/{fullName}/{forwardSelectedName}")
-    public ResponseEntity<?> applyForLeave(@PathVariable String fullName,@PathVariable String forwardSelectedName, @RequestBody LeaveRequestInfo leaveRequest) {
-        System.out.println("fullName::"+fullName);
-        System.out.println("forwardSelectedName::"+forwardSelectedName);
-        try {
-            LeaveRequestInfo createdRequest = leaveManagementService.createLeaveRequest(leaveRequest,fullName,forwardSelectedName);
-            return new ResponseEntity<>(createdRequest, HttpStatus.CREATED);
-        } catch (IllegalArgumentException e) {
-            // ছুটির কোটা শেষ হয়ে গেলে যে এরর আসবে তা হ্যান্ডেল করা
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
+    @PostMapping(value = "/apply/{fullName}/{forwardSelectedName}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> applyLeave(
+            @RequestPart("leaveRequest") LeaveRequestInfo leaveRequest,
+            @PathVariable("fullName") String fullName,
+            @PathVariable("forwardSelectedName") String forwardSelectedName,
+            @RequestParam(value = "images", required = false) List<MultipartFile> images) {
 
+        LeaveRequestInfo saved = leaveManagementService.createLeaveRequest(leaveRequest, fullName, forwardSelectedName, images);
+        return ResponseEntity.ok(saved);
+    }
     /**
      * ২. প্রধান শিক্ষকের ছুটি পরিবর্তন ও অনুমোদন করার এপিআই
      * URL: PUT http://localhost:8080/api/leave-requests/{id}/approve
@@ -135,44 +142,85 @@ public class LeaveRequestController {
         return leaveManagementService.findById(id);
     }
 
-    @PutMapping("/update/{requestId}")
-    public ResponseEntity<?> update(@RequestBody SentBackUpdateDTO updateData, @PathVariable Long requestId) {
+    @GetMapping("/images/{leaveId}")
+    public List<Map<String, Object>> getImages(@PathVariable Long leaveId) {
+        List<LeaveRequestImage> list = leaveRequestImageService.getImagesByLeaveId(leaveId);
+
+        return list.stream().map(img -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", img.getId());
+            map.put("imageName", img.getImageName());
+
+            // byte[] কে সরাসরি Base64 Data URI তে রূপান্তর
+            if (img.getImageData() != null) {
+                String base64Image = Base64.getEncoder().encodeToString(img.getImageData());
+                map.put("imageBase64", "data:image/png;base64," + base64Image);
+            }
+
+            return map;
+        }).collect(Collectors.toList());
+    }
+
+
+    @PostMapping("/update/{requestId}")
+    public ResponseEntity<?> update(
+            @RequestParam("personnelId") String personnelIdStr,
+            @RequestParam("leaveTypeId") String leaveTypeIdStr,
+            @RequestParam(value = "forwardTo", required = false) Long forwardTo,
+            @RequestParam(value = "forwardName", required = false) String forwardName,
+            @RequestParam("appliedStartDate") LocalDate appliedStartDate,
+            @RequestParam("appliedEndDate") LocalDate appliedEndDate,
+            @RequestParam("appliedTotalDays") String appliedTotalDaysStr,
+            @RequestParam("reason") String reason,
+            @RequestParam(value = "comments", required = false) String comments,
+            @RequestParam(value = "images", required = false) List<MultipartFile> images,
+            @PathVariable Long requestId) {
+
+        Long personnelId = personnelIdStr != null && !personnelIdStr.isEmpty() ? Long.valueOf(personnelIdStr) : null;
+        Long leaveTypeId = leaveTypeIdStr != null && !leaveTypeIdStr.isEmpty() ? Long.valueOf(leaveTypeIdStr) : null;
+        Double appliedTotalDays = appliedTotalDaysStr != null && !appliedTotalDaysStr.isEmpty() ? Double.valueOf(appliedTotalDaysStr) : 0.0;
+
         LeaveRequestInfo findData = leaveManagementService.findById(requestId);
-        System.out.println("findout data::"+findData);
-        //System.out.println("updateData::"+updateData);
 
         if (findData == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Leave request not found with ID: " + requestId);
         }
 
-        // Save the name *before* overwriting personnelInfo
         String personnelName = (findData.getPersonnelInfo() != null) ? findData.getPersonnelInfo().getName() : null;
-        String designation=findData.getPersonnelInfo().getDesignationInfo().getDesignation();
+        String designation = (findData.getPersonnelInfo() != null && findData.getPersonnelInfo().getDesignationInfo() != null)
+                ? findData.getPersonnelInfo().getDesignationInfo().getDesignation() : "";
 
-        findData.setPersonnelInfo(new PersonnelInfo(updateData.getPersonnelId()));
-        findData.setReason(updateData.getReason());
-        // Note: findData.setId(requestId) is redundant since findData is already loaded by requestId,
-        // but keeping it won't hurt as long as updateData.getRequestId() matches.
-        findData.setLeaveTypeInfo(new LeaveTypeInfo(updateData.getLeaveTypeId()));
-        findData.setForwardTo(updateData.getForwardTo());
-        findData.setAppliedStartDate(updateData.getAppliedStartDate());
-        findData.setAppliedEndDate(updateData.getAppliedEndDate());
-        findData.setAppliedTotalDays(updateData.getAppliedTotalDays());
+        findData.setPersonnelInfo(new PersonnelInfo(personnelId));
+        findData.setReason(reason);
+        findData.setLeaveTypeInfo(new LeaveTypeInfo(leaveTypeId));
+        findData.setForwardTo(forwardTo);
+        findData.setAppliedStartDate(appliedStartDate);
+        findData.setAppliedEndDate(appliedEndDate);
+        findData.setAppliedTotalDays(appliedTotalDays);
         findData.setStatus(LeaveStatus.PENDING);
+
         LeaveRequestInfo updatedData = leaveManagementService.updated(findData);
 
-        LeaveRequestHistoryInfo historyInfo=new LeaveRequestHistoryInfo();
+        // একাধিক ইমেজ সেভ করার সঠিক লজিক (.isEmpty() ব্যবহার করে)
+        // একাধিক ইমেজ সেভ করার সঠিক লজিক (.isEmpty() ব্যবহার করে)
+        // একাধিক ইমেজ একসাথে সেভ করার সঠিক কন্ট্রোলার লজিক
+        if (images != null && !images.isEmpty()) {
+            leaveRequestImageService.saveImages(requestId, images);
+        }
+
+        LeaveRequestHistoryInfo historyInfo = new LeaveRequestHistoryInfo();
         historyInfo.setLeaveRequestInfo(new LeaveRequestInfo(requestId));
-        historyInfo.setCreateOrUpdateBy("Updated By::"+personnelName+"-"+designation);
-        historyInfo.setComments(updateData.getComments());
+        historyInfo.setCreateOrUpdateBy("Updated By::" + personnelName + "-" + designation);
+        historyInfo.setComments(comments);
         historyInfo.setStatus("Sent");
         historyInfo.setCreateDate(LocalDateTime.now());
-        historyInfo.setForwardTo("Forward To:"+updateData.getForwardName());
+        historyInfo.setForwardTo("Forward To:" + forwardName);
         historyService.save(historyInfo);
 
         return ResponseEntity.ok(updatedData);
     }
+
 
     @GetMapping("/details/{id}")
     public LeaveRequestInfo details(@PathVariable Long id){
