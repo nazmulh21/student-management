@@ -2,6 +2,7 @@ package com.exam.school_management.leave_management.controller;
 
 import com.exam.school_management.enums.LeaveStatus;
 import com.exam.school_management.enums.Status;
+import com.exam.school_management.leave_management.dto.ForwardDTO;
 import com.exam.school_management.leave_management.dto.LeaveRequestProjos;
 import com.exam.school_management.leave_management.dto.SentBackDTO;
 import com.exam.school_management.leave_management.model.LeaveRequestHistoryInfo;
@@ -225,5 +226,30 @@ public class LeaveRequestController {
     @GetMapping("/details/{id}")
     public LeaveRequestInfo details(@PathVariable Long id){
         return leaveManagementService.findById(id);
+    }
+
+    @PostMapping("/forward")
+    public ResponseEntity<?> forward(@RequestBody ForwardDTO forwardDTO){
+       // System.out.println("forwardDTO"+forwardDTO);
+        LeaveRequestInfo findData=leaveManagementService.findById(forwardDTO.getRequestId());
+        //System.out.println("findData"+findData);
+        if (findData == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Leave request not found with ID: " + forwardDTO.getRequestId());
+        }
+        findData.setForwardTo(forwardDTO.getReceiverId());
+        findData.setStatus(LeaveStatus.FORWARD);
+       LeaveRequestInfo update= leaveManagementService.updated(findData);
+        LeaveRequestHistoryInfo historyInfo=new LeaveRequestHistoryInfo();
+        historyInfo.setForwardTo(forwardDTO.getReceiverName());
+        historyInfo.setComments(forwardDTO.getComments());
+        historyInfo.setStatus("Forwarded");
+        historyInfo.setCreateDate(LocalDateTime.now());
+        historyInfo.setCreateOrUpdateBy(forwardDTO.getForwarderName()+"-"+forwardDTO.getForwarderDesignation());
+        historyInfo.setLeaveRequestInfo(new LeaveRequestInfo(forwardDTO.getRequestId()));
+        historyService.save(historyInfo);
+
+
+        return ResponseEntity.ok(update);
     }
 }

@@ -26,13 +26,10 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequestInfo,L
     List<LeaveRequestInfo> findByStatus(LeaveStatus status);
 
 
-    @Query("SELECT l FROM LeaveRequestInfo l WHERE l.status = 'PENDING' AND l.forwardTo = :forwardTo")
+    @Query("SELECT l FROM LeaveRequestInfo l WHERE l.status IN (com.exam.school_management.enums.LeaveStatus.PENDING, com.exam.school_management.enums.LeaveStatus.FORWARD) AND l.forwardTo = :forwardTo")
     List<LeaveRequestInfo> findAllPendingRequests(@Param("forwardTo") Long forwardTo);
 
-    /**
-     * ৩. নির্দিষ্ট একজন শিক্ষকের জন্য:
-     * তিনি নিজের সব ছুটির আবেদনের ইতিহাস (History) দেখতে চাইলে এটি ব্যবহৃত হবে।
-     */
+
     List<LeaveRequestInfo> findByPersonnelInfoIdOrderByAppliedDateDesc(Long personnelId);//
 
     @Query("SELECT new com.exam.school_management.leave_management.dto.LeaveRequestProjos(" +

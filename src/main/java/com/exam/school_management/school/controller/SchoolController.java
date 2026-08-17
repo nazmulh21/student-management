@@ -22,6 +22,7 @@ public class SchoolController {
 
     @PostMapping("/save")
     public SchoolInfo doSave(@RequestBody SchoolInfo schoolInfo){
+        System.out.println("school"+schoolInfo);
         return schoolService.doSave(schoolInfo);
     }
 
@@ -49,8 +50,10 @@ public class SchoolController {
                 .map(existingCategory -> {
                     // 2. Update the field(s) with the new data from React
                     existingCategory.setSchoolName(updatedData.getSchoolName());
-                    existingCategory.setEIIN(updatedData.getEIIN());
+                    existingCategory.setEiin(updatedData.getEiin());
                     existingCategory.setMpoCode(updatedData.getMpoCode());
+                    existingCategory.setContact(updatedData.getContact());
+                    existingCategory.setEmail(updatedData.getEmail());
                     existingCategory.setAddress(updatedData.getAddress());
 
                     // 3. Save the updated entity back to the database

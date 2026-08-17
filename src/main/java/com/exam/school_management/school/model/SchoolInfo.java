@@ -15,10 +15,16 @@ public class SchoolInfo {
     private String schoolName;
 
     @Column(name = "eiin_no")
-    private Long eIIN;
+    private Long eiin;
 
     @Column(name = "mpo_code")
     private Long mpoCode;
+
+    @Column(name = "contact")
+    private String contact;
+
+    @Column(name = "email")
+    private String email;
 
     @Column(name = "address")
     private String address;

@@ -7,7 +7,8 @@ public enum LeaveStatus {
     APPROVED("APPROVED"),
     REJECTED("REJECTED"),
     CANCELLED("CANCELLED"),
-    SENT_BACK("SENTBACK"); // Maps Java's SENT_BACK to DB's SENTBACK
+    SENT_BACK("SENTBACK"),
+    FORWARD("FORWARD");// Maps Java's SENT_BACK to DB's SENTBACK
 
     private final String dbValue;
 

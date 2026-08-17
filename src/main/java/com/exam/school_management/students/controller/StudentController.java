@@ -22,6 +22,7 @@ import com.exam.school_management.user.user.model.CustomUserDetails;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
@@ -351,5 +352,14 @@ public class StudentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Server problem: " + ex.getMessage());
         }
+    }
+
+    @GetMapping(value = "/all/{classId}/{academicYear}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getAllStudent(@PathVariable Long classId, @PathVariable Long academicYear){
+        System.out.println("classId "+classId);
+        System.out.println("academicYear "+academicYear);
+        List<StudentInfo> getList = studentService.getStudentListTestimonial(classId, academicYear);
+        System.out.println("dataaa"+getList);
+        return ResponseEntity.ok(getList);
     }
 }

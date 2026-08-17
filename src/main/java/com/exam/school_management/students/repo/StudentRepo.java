@@ -72,4 +72,7 @@ public interface StudentRepo extends JpaRepository<StudentInfo, Long> {
     List<StudentProjos> getStudentsByOptionalSubject(@Param("classId") Long classId,@Param("optionalId") Long optionalId, @Param("year") Long year);
 
 
+    List<StudentInfo> findAllByClassInfoIdAndAcademicYear(Long classId, Long academicYear);
+
+
 }
