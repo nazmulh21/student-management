@@ -18,6 +18,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,6 +38,7 @@ public class PersonnelController {
         this.personnelService = personnelService;
     }
 
+    @PreAuthorize("hasAnyAuthority('ADD_PERSONNEL')")
     @PostMapping(value = "/save", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> doSave(@ModelAttribute PersonnelDTO dto) {
 
@@ -115,7 +117,7 @@ public class PersonnelController {
         return str.matches("\\d+"); // শুধুমাত্র সংখ্যা (0-9) হলে true রিটার্ন করবে
     }
 
-
+    @PreAuthorize("hasAnyAuthority('PERSONNEL_LIST')")
     @GetMapping("/list")
     public List<PersonnelInfo> getList(){
         return personnelService.getPersonnelList();
@@ -128,7 +130,7 @@ public class PersonnelController {
 
 
 
-
+    @PreAuthorize("hasAnyAuthority('UPDATE_PERSONNEL')")
     @PutMapping(value = "/update/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> doUpdate(@PathVariable Long id, @ModelAttribute PersonnelDTO dto) {
 
@@ -190,7 +192,7 @@ public class PersonnelController {
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
-
+    @PreAuthorize("hasAnyAuthority('DELETE_PERSONNEL')")
     @DeleteMapping("/delete/{indexNo}")
     public ResponseEntity<String> deletePersonnel(@PathVariable String indexNo) {
         try {

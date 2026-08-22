@@ -166,10 +166,9 @@ public class LeaveManagementService {
         historyInfo.setLeaveRequestInfo(new LeaveRequestInfo(requestId));
         historyInfo.setStatus("Approved");
         historyInfo.setCreateDate(LocalDateTime.now());
-        historyInfo.setCreateOrUpdateBy("Solved by::"+fullName+"-"+designation);
+        historyInfo.setCreateOrUpdateBy("Approved by::"+fullName+"-"+designation);
         historyInfo.setForwardTo("Approved");
         historyRepo.save(historyInfo);
-
         return req;
     }
 

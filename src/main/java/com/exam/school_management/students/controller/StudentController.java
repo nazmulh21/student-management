@@ -24,6 +24,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -50,7 +51,7 @@ public class StudentController {
         this.studentService = studentService;
         this.admissionService = admissionService;
     }
-
+    @PreAuthorize("hasAnyAuthority('STUDENT_REGISTRATION')")
     @PostMapping("/save")
     public ResponseEntity<?> doSave(@ModelAttribute StudentDTO dto) throws IOException, ParseException {
         System.out.println("stu data::"+dto);
@@ -206,7 +207,7 @@ public class StudentController {
         }
         return ResponseEntity.notFound().build();
     }
-
+    @PreAuthorize("hasAnyAuthority('UPDATE_STUDENT')")
     @PutMapping("/update/{uId}/{academicYear}")
     public ResponseEntity<?> updateStudent(
             @PathVariable String uId,
@@ -254,6 +255,7 @@ public class StudentController {
         }
     }
 
+    @PreAuthorize("hasAnyAuthority('DELETE_STUDENT')")
     @DeleteMapping("/delete/{uId}/{academicYear}")
     public ResponseEntity<String> deleteStudent(@PathVariable String uId, @PathVariable Long academicYear) {
         try {
