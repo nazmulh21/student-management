@@ -95,7 +95,7 @@ public class AllBillCollectionController {
                     if (dto.getBillId() == null) {
                         continue;
                     }
-                    System.out.println("Others bill discount applied: " + dto.getDiscount());
+                    //System.out.println("Others bill discount applied: " + dto.getDiscount());
 
                     Optional<OthersBillInfo> existOthers = othersBillService.findById(dto.getBillId());
 

@@ -24,9 +24,8 @@ public class ReceiptInfo {
     private BigDecimal paidAmount;
     private BigDecimal discount;
     private Date paymentDate;
-
-
     private String billType;
+    private Long createBy;
 
     @ManyToOne
     @JoinColumn(name = "student_id")
