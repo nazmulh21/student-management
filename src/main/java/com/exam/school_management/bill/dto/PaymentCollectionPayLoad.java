@@ -17,4 +17,5 @@ public class PaymentCollectionPayLoad {
 
     private List<TuitionPaymentDTO> tuitionBreakdown;
     private List<OtherPaymentDTO> othersBreakdown;
+    private Long personnelId;
 }

@@ -38,7 +38,7 @@ public class SecurityConfig {
                 )*/
                 .authorizeHttpRequests(auth -> auth
                         // ১. শুধুমাত্র লগইন ও রেজিস্ট্রেশন এন্ডপয়েন্ট পাবলিক রাখুন
-                        .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/forgot-password", "/api/auth/reset-password-confirm","/api/auth/logout").permitAll()
+                        .requestMatchers("/api/auth/login",  "/api/auth/forgot-password", "/api/auth/reset-password-confirm","/api/auth/logout").permitAll()
 
                         // ২. ছবি বা অন্য পাবলিক স্ট্যাটিক ফাইল
                         .requestMatchers("/student-photos/**", "/verify-student/**").permitAll()
@@ -46,7 +46,7 @@ public class SecurityConfig {
                         .requestMatchers("/class/list", "/subject/list").authenticated()
 
                         // ৩. অন্যান্য সব রিকোয়েস্ট অথেন্টিকেটেড হতে হবে (এর ভেতরেই '/api/auth/me' থাকবে)
-                        .requestMatchers("/api/auth/me").authenticated()
+                        .requestMatchers("/api/auth/me","/api/auth/register").authenticated()
                         .requestMatchers("/collection-category/**","/academic-result/**").authenticated()
                         .anyRequest().authenticated()
                 )
