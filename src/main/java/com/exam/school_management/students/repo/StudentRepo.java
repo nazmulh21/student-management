@@ -74,5 +74,7 @@ public interface StudentRepo extends JpaRepository<StudentInfo, Long> {
 
     List<StudentInfo> findAllByClassInfoIdAndAcademicYearOrderByRollAsc(Long classId, Long academicYear);
 
+    List<StudentInfo> findAllByIdIn(List<Long> ids);
+
 
 }

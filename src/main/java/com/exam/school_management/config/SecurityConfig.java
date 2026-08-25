@@ -41,7 +41,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/login",  "/api/auth/forgot-password", "/api/auth/reset-password-confirm","/api/auth/logout").permitAll()
 
                         // ২. ছবি বা অন্য পাবলিক স্ট্যাটিক ফাইল
-                        .requestMatchers("/student-photos/**", "/verify-student/**").permitAll()
+                        .requestMatchers("/student-photos/**", "/verify-student/**","/ssc/process-selected").permitAll()
                         .requestMatchers("/role/**","/leave-type/**","/api/leave-requests/**","/student/all-active/**","/class-subject-mark/**","/personnel/**","/attendance/**","/leave-balance/**","/academic_year/**","/leave-history/**").permitAll()
                         .requestMatchers("/class/list", "/subject/list").authenticated()
 
