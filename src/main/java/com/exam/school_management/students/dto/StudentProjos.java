@@ -5,6 +5,7 @@ import lombok.Data;
 @Data
 public class StudentProjos {
     private String className;
+    private Long stuId;
     private Long roll;
     private String studentName;
     private String groupName;
@@ -31,5 +32,12 @@ public class StudentProjos {
         this.studentName = studentName;
         this.roll = roll;
         this.groupName = groupName;
+    }
+
+    public StudentProjos( Long stuId,String studentName) {
+        this.stuId = stuId;
+        this.studentName = studentName;
+
+
     }
 }

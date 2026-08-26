@@ -6,6 +6,8 @@ import com.exam.school_management.receipt.repo.ReceiptRepo;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -38,4 +40,8 @@ public class ReceiptService {
         return receiptRepo.findAllByReceiptNoLikeFields(receiptNo);
     }
 
+    public List<ReceiptSummaryDTO> getStudentPaidReport(LocalDate startDate, LocalDate endDate, Long stuId){
+        LocalDate adjustedEndDate = (endDate != null) ? endDate.plusDays(1) : null;
+        return receiptRepo.findReceiptSummary(startDate, adjustedEndDate, stuId);
+    }
 }

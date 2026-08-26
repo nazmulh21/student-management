@@ -14,8 +14,12 @@ public class PaymentCollectionPayLoad {
     private Double totalPaidAmount;
     private BigDecimal discount;
 
+    private Long createBy;
+    private String fullName;
+    private String designation;
+
 
     private List<TuitionPaymentDTO> tuitionBreakdown;
     private List<OtherPaymentDTO> othersBreakdown;
-    private Long createBy;
+
 }

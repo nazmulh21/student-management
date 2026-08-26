@@ -13,4 +13,5 @@ public class TuitionPaymentDTO {
     private String academicYear;
     private BigDecimal amountPaid;
     private BigDecimal discount;
+    private Long createBy;
 }

@@ -11,4 +11,5 @@ public class OtherPaymentDTO {
     private String categoryName;
     private BigDecimal amountPaid;
     private BigDecimal discount;
+    private Long createBy;
 }

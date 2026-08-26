@@ -9,6 +9,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Date;
 
 @Data
@@ -23,7 +24,7 @@ public class ReceiptInfo {
 
     private BigDecimal paidAmount;
     private BigDecimal discount;
-    private Date paymentDate;
+    private LocalDate paymentDate;
     private String billType;
     private Long createBy;
 

@@ -77,4 +77,13 @@ public interface StudentRepo extends JpaRepository<StudentInfo, Long> {
     List<StudentInfo> findAllByIdIn(List<Long> ids);
 
 
+    @Query("SELECT new com.exam.school_management.students.dto.StudentProjos(s.id,s.studentName) " +
+            "FROM StudentInfo s " +
+            "WHERE s.classInfo.id = :classId " +
+            "AND s.academicYear = :academicYear")
+    List<StudentProjos> getStuNamesByClassIdAndAcademicYear(
+            @Param("classId") Long classId,
+            @Param("academicYear") Long academicYear
+    );
+
 }

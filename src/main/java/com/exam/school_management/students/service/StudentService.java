@@ -383,4 +383,9 @@ public class StudentService {
     public List<StudentInfo> getStudentListTestimonial(Long classId, Long academicYear){
         return studentRepo.findAllByClassInfoIdAndAcademicYearOrderByRollAsc(classId,academicYear);
     }
+
+    public List<StudentProjos> getStudentNames(Long classId, Long academicYear){
+        return studentRepo.getStuNamesByClassIdAndAcademicYear(classId,academicYear);
+    }
+
 }

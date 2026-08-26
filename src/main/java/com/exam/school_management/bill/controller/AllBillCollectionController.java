@@ -10,6 +10,8 @@ import com.exam.school_management.others_bill.service.OthersBillService;
 import com.exam.school_management.receipt.model.ReceiptInfo;
 import com.exam.school_management.receipt.service.ReceiptService;
 import com.exam.school_management.students.model.StudentInfo;
+import com.exam.school_management.transaction_history.model.TransactionHistoryInfo;
+import com.exam.school_management.transaction_history.service.TransactionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -30,15 +33,18 @@ public class AllBillCollectionController {
     private final MonthlyBillService monthlyBillService;
     private final ReceiptService receiptService;
     private final OthersBillService othersBillService;
+    private final TransactionService transactionService;
 
-    public AllBillCollectionController(MonthlyBillService monthlyBillService, ReceiptService receiptService, OthersBillService othersBillService) {
+    public AllBillCollectionController(MonthlyBillService monthlyBillService, ReceiptService receiptService, OthersBillService othersBillService, TransactionService transactionService) {
         this.monthlyBillService = monthlyBillService;
         this.receiptService = receiptService;
         this.othersBillService = othersBillService;
+        this.transactionService = transactionService;
     }
 
     @PostMapping("/collect")
     public ResponseEntity<?> collectStudentFees(@RequestBody PaymentCollectionPayLoad payload) {
+        System.out.println("payload"+payload);
         try {
             SimpleDateFormat datePrefixFormat = new SimpleDateFormat("ddMMyy");
             String fullDatePrefix = datePrefixFormat.format(new Date());
@@ -46,6 +52,11 @@ public class AllBillCollectionController {
             // CRITICAL FIX: পুরো ট্রানজেকশন বা সেশনের জন্য মাত্র একবার রসিদ নাম্বার জেনারেট করুন
             String nextSerial = receiptService.getNextSerial();
             String sharedReceiptNo = "T" + fullDatePrefix + nextSerial;
+            TransactionHistoryInfo transactionHistory=new TransactionHistoryInfo();
+            transactionHistory.setReceiptId(sharedReceiptNo);
+            transactionHistory.setCollectionDate(new Date());
+            transactionHistory.setCollectionBy(payload.getFullName()+"-"+payload.getDesignation());
+            transactionService.save(transactionHistory);
 
             // একটি মাস্টার লিস্ট তৈরি করুন যা সব সেভ হওয়া রসিদ ধরে রাখবে
             List<ReceiptInfo> savedReceipts = new ArrayList<>();
@@ -69,7 +80,7 @@ public class AllBillCollectionController {
                         billsToUpdate.add(updatedBill);
 
                         // এখানে sharedReceiptNo পাস করা হচ্ছে
-                        ReceiptInfo receipt = createReceipt(sharedReceiptNo, "TUITION", tuition.getAmountPaid(), tuition.getDiscount(), existingBill, null);
+                        ReceiptInfo receipt = createReceipt(sharedReceiptNo, "TUITION", tuition.getAmountPaid(), tuition.getDiscount(), existingBill, null,tuition.getCreateBy());
                         list.add(receipt);
 
                     } else {
@@ -106,7 +117,7 @@ public class AllBillCollectionController {
                         list.add(updatedBill);
 
                         // এখানেও একই sharedReceiptNo পাস করা হচ্ছে
-                        ReceiptInfo receipt = createReceipt(sharedReceiptNo, "Others", dto.getAmountPaid(), dto.getDiscount(), null, existingBill);
+                        ReceiptInfo receipt = createReceipt(sharedReceiptNo, "Others", dto.getAmountPaid(), dto.getDiscount(), null, existingBill,dto.getCreateBy());
                         receipts.add(receipt);
 
                     } else {
@@ -174,7 +185,9 @@ public class AllBillCollectionController {
         return existingBill;
     }
 
-    private record BillCalculationResult(BigDecimal paid, BigDecimal discount) {}
+    private record BillCalculationResult(BigDecimal paid, BigDecimal discount) {
+
+    }
 
 
 
@@ -184,7 +197,8 @@ public class AllBillCollectionController {
             BigDecimal amountPaid,
             BigDecimal discount,
             MonthlyBillInfo tuitionBill,
-            OthersBillInfo othersBill
+            OthersBillInfo othersBill,
+            Long createBy
     ) {
 
         ReceiptInfo receiptInfo = new ReceiptInfo();
@@ -196,7 +210,8 @@ public class AllBillCollectionController {
         receiptInfo.setBillType(billType);
         receiptInfo.setPaidAmount(amountPaid != null ? amountPaid : BigDecimal.ZERO);
         receiptInfo.setDiscount(discount != null ? discount : BigDecimal.ZERO);
-        receiptInfo.setPaymentDate(new Date());
+        receiptInfo.setPaymentDate(LocalDate.now());
+        receiptInfo.setCreateBy(createBy);
 
         // 3. Link to respective bill mappings dynamically
         receiptInfo.setMonthlyBillInfo(tuitionBill);

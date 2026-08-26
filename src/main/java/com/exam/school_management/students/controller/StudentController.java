@@ -364,4 +364,11 @@ public class StudentController {
         System.out.println("dataaa"+getList);
         return ResponseEntity.ok(getList);
     }
+
+
+    @GetMapping("/names/{classId}/{academicYear}")
+    public List<StudentProjos> getNames(@PathVariable Long classId, @PathVariable Long academicYear){
+        List<StudentProjos> list=studentService.getStudentNames(classId,academicYear);
+        return list;
+    }
 }
