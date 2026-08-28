@@ -66,7 +66,8 @@ public class PersonnelAttendanceService {
 
     // বাটন ক্লিকের মাধ্যমে চেক-ইন বা চেক-আউট টগল করার লজিক
     @Transactional
-    public PersonnelAttendanceDTO processToggle(Long personnelId, LocalDate date) {
+    public PersonnelAttendanceDTO processToggle(Long personnelId, LocalDate date,String ipAddress) {
+        System.out.println("ip::"+ipAddress);
         Optional<PersonnelAttendanceInfo> existing = personnelAttendanceRepo.findByPersonnelInfoIdAndAttendanceDate(personnelId, date);
         LocalTime now = LocalTime.now(BD_ZONE);
         PersonnelAttendanceInfo entity;
@@ -79,6 +80,7 @@ public class PersonnelAttendanceService {
             entity.setPersonnelInfo(info);
             entity.setAttendanceDate(date);
             entity.setCheckInTime(now);
+            entity.setInIpAddress(ipAddress);
             entity.setStatus("PRESENT");
         } else {
             entity = existing.get();
@@ -86,6 +88,7 @@ public class PersonnelAttendanceService {
                 throw new IllegalStateException("Attendance already completed for today!");
             }
             entity.setCheckOutTime(now);
+            entity.setOutIpAddress(ipAddress);
         }
 
         PersonnelAttendanceInfo saved = personnelAttendanceRepo.save(entity);
@@ -132,6 +135,8 @@ public class PersonnelAttendanceService {
         dto.setAttendanceDate(info.getAttendanceDate());
         dto.setCheckInTime(info.getCheckInTime());
         dto.setCheckOutTime(info.getCheckOutTime());
+        dto.setInIpAddress(info.getInIpAddress());
+        dto.setOutIpAddress(info.getOutIpAddress());
 
         if (info.getCheckOutTime() != null) {
             dto.setStatusText("COMPLETED");

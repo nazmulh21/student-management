@@ -25,6 +25,12 @@ public class PersonnelAttendanceInfo {
     @Column(name = "check_out_time")
     private LocalTime checkOutTime;
 
+    @Column(name = "in_ip_address")
+    private String inIpAddress;
+
+    @Column(name = "out_ip_address")
+    private String outIpAddress;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "personnel_id")
     private PersonnelInfo personnelInfo;

@@ -48,7 +48,7 @@ public class AcademicYearService {
     }
 
     public List<AcademicYearInfo> list(){
-        return academicYearRepo.findAll();
+        return academicYearRepo.findAllByOrderByAcademicYearDesc();
     }
 
     public Optional<AcademicYearInfo> getAcademicYear(Long id){

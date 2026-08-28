@@ -15,5 +15,7 @@ public class PersonnelAttendanceDTO {
 
     private LocalTime checkInTime;
     private LocalTime checkOutTime;
-    private String statusText; // "NOT_MARKED", "CHECKED_IN", "COMPLETED", "ABSENT", "HOLIDAY"
+    private String statusText;
+    private String inIpAddress;
+    private String outIpAddress;
 }
