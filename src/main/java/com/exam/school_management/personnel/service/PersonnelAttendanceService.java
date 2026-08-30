@@ -66,10 +66,13 @@ public class PersonnelAttendanceService {
 
     // বাটন ক্লিকের মাধ্যমে চেক-ইন বা চেক-আউট টগল করার লজিক
     @Transactional
-    public PersonnelAttendanceDTO processToggle(Long personnelId, LocalDate date,String ipAddress) {
-        System.out.println("ip::"+ipAddress);
+    public PersonnelAttendanceDTO processToggle(Long personnelId, LocalDate date, String ipAddress) {
+        System.out.println("ip::" + ipAddress);
         Optional<PersonnelAttendanceInfo> existing = personnelAttendanceRepo.findByPersonnelInfoIdAndAttendanceDate(personnelId, date);
-        LocalTime now = LocalTime.now(BD_ZONE);
+
+        // বর্তমান সময়কে স্ট্রিং ফরম্যাটে রূপান্তর করা হলো (যেহেতু মডেলে এখন String ব্যবহার করা হচ্ছে)
+        String nowStr = LocalTime.now(BD_ZONE).format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"));
+
         PersonnelAttendanceInfo entity;
 
         if (existing.isEmpty()) {
@@ -79,7 +82,7 @@ public class PersonnelAttendanceService {
 
             entity.setPersonnelInfo(info);
             entity.setAttendanceDate(date);
-            entity.setCheckInTime(now);
+            entity.setCheckInTime(nowStr); // String সেট করা হলো
             entity.setInIpAddress(ipAddress);
             entity.setStatus("PRESENT");
         } else {
@@ -87,7 +90,7 @@ public class PersonnelAttendanceService {
             if (entity.getCheckOutTime() != null) {
                 throw new IllegalStateException("Attendance already completed for today!");
             }
-            entity.setCheckOutTime(now);
+            entity.setCheckOutTime(nowStr); // String সেট করা হলো
             entity.setOutIpAddress(ipAddress);
         }
 
@@ -138,16 +141,16 @@ public class PersonnelAttendanceService {
         dto.setInIpAddress(info.getInIpAddress());
         dto.setOutIpAddress(info.getOutIpAddress());
 
-        if (info.getCheckOutTime() != null) {
+        // স্ট্যাটাস টেক্সট নির্ধারণ (স্ট্রিংয়ের ক্ষেত্রে null এবং empty চেক করা নিরাপদ)
+        if (info.getCheckOutTime() != null && !info.getCheckOutTime().isEmpty()) {
             dto.setStatusText("COMPLETED");
-        } else if (info.getCheckInTime() != null) {
+        } else if (info.getCheckInTime() != null && !info.getCheckInTime().isEmpty()) {
             dto.setStatusText("CHECKED_IN");
         } else {
             dto.setStatusText("NOT_MARKED");
         }
         return dto;
     }
-
     // অনুপস্থিত, সাধারণ উইকেন্ড বা সরকারি ছুটির দিনের জন্য খালি DTO তৈরির মেথড
     private PersonnelAttendanceDTO createEmptyAttendanceDTO(Long personnelId, LocalDate date, boolean isWeekend, String officialHolidayName) {
         PersonnelAttendanceDTO dto = new PersonnelAttendanceDTO();

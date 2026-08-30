@@ -1,5 +1,6 @@
 package com.exam.school_management.attendance.service;
 
+import com.exam.school_management.attendance.dto.StudentAttendanceDTO;
 import com.exam.school_management.attendance.model.AttendanceInfo;
 import com.exam.school_management.attendance.repo.AttendanceRepo;
 import com.exam.school_management.enums.AttendanceStatus;
@@ -15,6 +16,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -126,5 +128,42 @@ public class AttendanceService {
             return list.get(0); // যেহেতু ORDER BY DESC করা আছে, তাই প্রথমটিই আজকের সর্বশেষ রেকর্ড
         }
         return null;
+    }
+
+
+
+
+    @Transactional
+    public List<AttendanceInfo> saveBulkAttendance(List<StudentAttendanceDTO> dtoList) {
+        List<AttendanceInfo> attendanceList = dtoList.stream().map(dto -> {
+            AttendanceInfo info = new AttendanceInfo();
+
+            // স্টুডেন্ট ইনফো সেট করা
+            info.setStudentInfo(dto.getStudentInfo());
+
+            // LocalDate কে LocalDateTime-এ রূপান্তর (যেমন: ওই দিনের শুরুর সময় 00:00:00 বা বর্তমান সময়)
+            LocalDateTime checkInTime = dto.getAttendanceDate() != null
+                    ? dto.getAttendanceDate().atStartOfDay()
+                    : LocalDateTime.now();
+
+            info.setCheckIn(checkInTime);
+
+            // চেক-আউট শুরুতে নাল থাকবে
+            info.setCheckOut(null);
+
+            // স্ট্রিং থেকে AttendanceStatus Enum-এ রূপান্তর (যেমন: "PRESENT" বা "ABSENT")
+            if (dto.getStatus() != null && !dto.getStatus().isEmpty()) {
+                info.setStatus(AttendanceStatus.valueOf(dto.getStatus()));
+            } else {
+                info.setStatus(AttendanceStatus.PRESENT); // ডিফল্ট স্ট্যাটাস
+            }
+
+            info.setRemarks(dto.getRemarks());
+
+            return info;
+        }).collect(Collectors.toList());
+
+        // ডাটাবেজে একসাথে সব সেভ করা
+        return attendanceRepo.saveAll(attendanceList);
     }
 }

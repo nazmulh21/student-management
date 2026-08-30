@@ -3,7 +3,6 @@ package com.exam.school_management.personnel.model;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDate;
-import java.time.LocalTime;
 
 @Table(name = "personnel_attendance_info")
 @Data
@@ -19,11 +18,12 @@ public class PersonnelAttendanceInfo {
     @Column(name = "date")
     private LocalDate attendanceDate;
 
+    // LocalTime এর পরিবর্তে String ব্যবহার করা হলো যাতে ডাটাবেজের ভুল ফরম্যাট বা নেতিবাচক মানের কারণে এরর না করে
     @Column(name = "check_in_time")
-    private LocalTime checkInTime;
+    private String checkInTime;
 
     @Column(name = "check_out_time")
-    private LocalTime checkOutTime;
+    private String checkOutTime;
 
     @Column(name = "in_ip_address")
     private String inIpAddress;

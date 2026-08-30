@@ -1,5 +1,6 @@
 package com.exam.school_management.attendance.controller;
 
+import com.exam.school_management.attendance.dto.StudentAttendanceDTO;
 import com.exam.school_management.attendance.model.AttendanceInfo;
 import com.exam.school_management.attendance.service.AttendanceService;
 import com.exam.school_management.enums.AttendanceStatus;
@@ -33,24 +34,23 @@ public class AttendanceController {
         this.studentService=studentService;
     }
 
+
+    @Transactional
     @PostMapping("/save")
-    @Transactional // Ensures entire batch rolls back if a single save fails
-    public ResponseEntity<?> save(@RequestBody List<AttendanceInfo> attendanceInfos) {
-
-        // 1. Validation Safeguard
-        if (attendanceInfos == null || attendanceInfos.isEmpty()) {
-            return ResponseEntity.badRequest().body("Attendance list cannot be empty.");
-        }
-
+    public ResponseEntity<?> saveAttendance(@RequestBody List<StudentAttendanceDTO> attendanceList) {
         try {
-            // 2. Delegate processing to your idempotent service layer
-            List<AttendanceInfo> savedList = attendanceService.save(attendanceInfos);
+            // ডেটা খালি আছে কিনা চেক করা
+            if (attendanceList == null || attendanceList.isEmpty()) {
+                return ResponseEntity.badRequest().body("Attendance list cannot be empty.");
+            }
+
+            // সার্ভিস কল করে বাল্ক অ্যাটেনডেন্স সেভ করা
+            List<AttendanceInfo> savedList = attendanceService.saveBulkAttendance(attendanceList);
             return ResponseEntity.ok(savedList);
 
         } catch (Exception e) {
-            // 3. Fallback Exception Handling
-            return ResponseEntity.internalServerError()
-                    .body("An error occurred while saving attendance: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("Failed to save attendance: " + e.getMessage());
         }
     }
 
