@@ -29,8 +29,26 @@ public class ExpenseInfo {
     private Double total;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "peseonnel_id", nullable = false)
+    @JoinColumn(name = "personnel_id", nullable = false)
     private PersonnelInfo personnelInfo;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "created_by_id", nullable = false)
+    private PersonnelInfo createdBy;
+
+    // নতুন যোগ করা ফিল্ডসমূহ:
+    @Column(name = "status")
+    private String status; // যেমন: "PENDING", "APPROVED", "REJECTED"
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "approved_by_id", nullable = true)
+    private PersonnelInfo approvedBy; // যিনি অ্যাপ্রুভ বা রিজেক্ট করবেন তার PersonnelInfo
+
+    @Column(name="approved_date")
+    private LocalDate approvedDate;
+
+    @Column(name = "reject_reason")
+    private String rejectReason; // রিজেক্ট করলে তার কারণ সংরক্ষণের জন্য
 
     public ExpenseInfo() {
     }
