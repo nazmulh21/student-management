@@ -52,6 +52,7 @@ public class PersonnelAttendanceController {
 
         List<PersonnelAttendanceDTO> reportList = attendanceService.getAttendanceReport(startDate, endDate);
 
+
         if (personnelId != null) {
             reportList = reportList.stream()
                     .filter(dto -> dto.getPersonnelId().equals(personnelId))

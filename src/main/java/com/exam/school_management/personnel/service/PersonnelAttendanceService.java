@@ -1,6 +1,9 @@
 package com.exam.school_management.personnel.service;
 
 import com.exam.school_management.enums.AttendanceStatus;
+import com.exam.school_management.enums.LeaveStatus; // এটি ইম্পোর্ট করুন
+import com.exam.school_management.leave_management.model.LeaveRequestInfo; // এটি ইম্পোর্ট করুন
+import com.exam.school_management.leave_management.repo.LeaveRequestRepository;
 import com.exam.school_management.personnel.dto.PersonnelAttendanceDTO;
 import com.exam.school_management.personnel.model.HolidayInfo;
 import com.exam.school_management.personnel.model.PersonnelAttendanceInfo;
@@ -24,17 +27,20 @@ public class PersonnelAttendanceService {
 
     private final PersonnelAttendanceRepo personnelAttendanceRepo;
     private final PersonnelRepo personnelRepo;
-    private final HolidayRepo holidayRepo; // নতুন যুক্ত হলো
+    private final HolidayRepo holidayRepo;
+    private final LeaveRequestRepository leaveRequestRepo; // নতুন যুক্ত হলো
 
     // বাংলাদেশের টাইম জোন
     private static final ZoneId BD_ZONE = ZoneId.of("Asia/Dhaka");
 
     public PersonnelAttendanceService(PersonnelAttendanceRepo personnelAttendanceRepo,
                                       PersonnelRepo personnelRepo,
-                                      HolidayRepo holidayRepo) {
+                                      HolidayRepo holidayRepo,
+                                      LeaveRequestRepository leaveRequestRepo) { // কনস্ট্রাক্টরে যুক্ত হলো
         this.personnelAttendanceRepo = personnelAttendanceRepo;
         this.personnelRepo = personnelRepo;
         this.holidayRepo = holidayRepo;
+        this.leaveRequestRepo = leaveRequestRepo;
     }
 
     // নির্দিষ্ট ডেটের সবার স্ট্যাটাস একসাথে ফ্রন্টএন্ডে পাঠানোর ম্যাপ লজিক
@@ -45,6 +51,13 @@ public class PersonnelAttendanceService {
         // ওই নির্দিষ্ট দিনের জন্য কোনো সরকারি/একাডেমিক ছুটি আছে কি না তা চেক করা
         List<HolidayInfo> officialHolidays = holidayRepo.findByStartDateLessThanEqualAndEndDateGreaterThanEqual(date, date);
         String officialHolidayName = getOfficialHolidayName(date, officialHolidays);
+
+        // ওই নির্দিষ্ট দিনে অনুমোদিত ছুটিতে কারা আছেন তা বের করা
+        List<LeaveRequestInfo> approvedLeaves = leaveRequestRepo
+                .findByApprovedStartDateLessThanEqualAndApprovedEndDateGreaterThanEqualAndStatus(date, date, LeaveStatus.APPROVED);
+
+        Map<Long, LeaveRequestInfo> leaveMap = approvedLeaves.stream()
+                .collect(Collectors.toMap(info -> info.getPersonnelInfo().getId(), info -> info, (a, b) -> a));
 
         Map<Long, PersonnelAttendanceInfo> attendanceMap = attendanceList.stream()
                 .collect(Collectors.toMap(info -> info.getPersonnelInfo().getId(), info -> info));
@@ -57,7 +70,11 @@ public class PersonnelAttendanceService {
             if (attendanceMap.containsKey(person.getId())) {
                 dto = convertToDTO(attendanceMap.get(person.getId()));
             } else {
-                dto = createEmptyAttendanceDTO(person.getId(), date, isWeekend, officialHolidayName);
+                // চেক করা হচ্ছে শিক্ষক ছুটিতে আছেন কি না
+                LeaveRequestInfo leave = leaveMap.get(person.getId());
+                String leaveStatusText = (leave != null) ? "ON_LEAVE" : null;
+
+                dto = createEmptyAttendanceDTO(person.getId(), date, isWeekend, officialHolidayName, leaveStatusText);
             }
             finalMap.put(person.getId(), dto);
         }
@@ -67,12 +84,9 @@ public class PersonnelAttendanceService {
     // বাটন ক্লিকের মাধ্যমে চেক-ইন বা চেক-আউট টগল করার লজিক
     @Transactional
     public PersonnelAttendanceDTO processToggle(Long personnelId, LocalDate date, String ipAddress) {
-        System.out.println("ip::" + ipAddress);
         Optional<PersonnelAttendanceInfo> existing = personnelAttendanceRepo.findByPersonnelInfoIdAndAttendanceDate(personnelId, date);
 
-        // বর্তমান সময়কে স্ট্রিং ফরম্যাটে রূপান্তর করা হলো (যেহেতু মডেলে এখন String ব্যবহার করা হচ্ছে)
         String nowStr = LocalTime.now(BD_ZONE).format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"));
-
         PersonnelAttendanceInfo entity;
 
         if (existing.isEmpty()) {
@@ -82,7 +96,7 @@ public class PersonnelAttendanceService {
 
             entity.setPersonnelInfo(info);
             entity.setAttendanceDate(date);
-            entity.setCheckInTime(nowStr); // String সেট করা হলো
+            entity.setCheckInTime(nowStr);
             entity.setInIpAddress(ipAddress);
             entity.setStatus("PRESENT");
         } else {
@@ -90,7 +104,7 @@ public class PersonnelAttendanceService {
             if (entity.getCheckOutTime() != null) {
                 throw new IllegalStateException("Attendance already completed for today!");
             }
-            entity.setCheckOutTime(nowStr); // String সেট করা হলো
+            entity.setCheckOutTime(nowStr);
             entity.setOutIpAddress(ipAddress);
         }
 
@@ -103,8 +117,10 @@ public class PersonnelAttendanceService {
         List<PersonnelAttendanceInfo> attendanceList = personnelAttendanceRepo.findByAttendanceDateBetween(startDate, endDate);
         List<PersonnelInfo> allPersonnel = personnelRepo.findAll();
 
-        // ডেট রেঞ্জের ভেতরের সব সরকারি/একাডেমিক ছুটি একসাথে তুলে আনা (ডাটাবেজ হিট কমানোর জন্য)
+        // ডেট রেঞ্জের ভেতরের সব সরকারি/একাডেমিক ছুটি এবং অনুমোদিত ছুটি একসাথে তুলে আনা
         List<HolidayInfo> officialHolidays = holidayRepo.findByStartDateLessThanEqualAndEndDateGreaterThanEqual(endDate, startDate);
+        List<LeaveRequestInfo> rangeLeaves = leaveRequestRepo
+                .findByApprovedStartDateLessThanEqualAndApprovedEndDateGreaterThanEqualAndStatus(endDate, startDate, LeaveStatus.APPROVED);
 
         List<PersonnelAttendanceDTO> reportList = new ArrayList<>();
 
@@ -117,12 +133,20 @@ public class PersonnelAttendanceService {
                     .filter(info -> info.getAttendanceDate().equals(currentDate))
                     .collect(Collectors.toMap(info -> info.getPersonnelInfo().getId(), info -> info, (a, b) -> a));
 
+            // নির্দিষ্ট তারিখের জন্য কার কার ছুটি আছে তার সাব-ম্যাপ তৈরি
+            Map<Long, LeaveRequestInfo> dailyLeaveMap = rangeLeaves.stream()
+                    .filter(leave -> !currentDate.isBefore(leave.getApprovedStartDate()) && !currentDate.isAfter(leave.getApprovedEndDate()))
+                    .collect(Collectors.toMap(info -> info.getPersonnelInfo().getId(), info -> info, (a, b) -> a));
+
             for (PersonnelInfo person : allPersonnel) {
                 PersonnelAttendanceDTO dto;
                 if (dailyAttendanceMap.containsKey(person.getId())) {
                     dto = convertToDTO(dailyAttendanceMap.get(person.getId()));
                 } else {
-                    dto = createEmptyAttendanceDTO(person.getId(), currentDate, isWeekend, officialHolidayName);
+                    LeaveRequestInfo leave = dailyLeaveMap.get(person.getId());
+                    String leaveStatusText = (leave != null) ? "ON_LEAVE" : null;
+
+                    dto = createEmptyAttendanceDTO(person.getId(), currentDate, isWeekend, officialHolidayName, leaveStatusText);
                 }
                 reportList.add(dto);
             }
@@ -141,7 +165,6 @@ public class PersonnelAttendanceService {
         dto.setInIpAddress(info.getInIpAddress());
         dto.setOutIpAddress(info.getOutIpAddress());
 
-        // স্ট্যাটাস টেক্সট নির্ধারণ (স্ট্রিংয়ের ক্ষেত্রে null এবং empty চেক করা নিরাপদ)
         if (info.getCheckOutTime() != null && !info.getCheckOutTime().isEmpty()) {
             dto.setStatusText("COMPLETED");
         } else if (info.getCheckInTime() != null && !info.getCheckInTime().isEmpty()) {
@@ -151,8 +174,9 @@ public class PersonnelAttendanceService {
         }
         return dto;
     }
-    // অনুপস্থিত, সাধারণ উইকেন্ড বা সরকারি ছুটির দিনের জন্য খালি DTO তৈরির মেথড
-    private PersonnelAttendanceDTO createEmptyAttendanceDTO(Long personnelId, LocalDate date, boolean isWeekend, String officialHolidayName) {
+
+    // অনুপস্থিত, সাধারণ উইকেন্ড, সরকারি ছুটি বা অনুমোদিত ছুটির জন্য DTO তৈরির মেথড
+    private PersonnelAttendanceDTO createEmptyAttendanceDTO(Long personnelId, LocalDate date, boolean isWeekend, String officialHolidayName, String leaveStatusText) {
         PersonnelAttendanceDTO dto = new PersonnelAttendanceDTO();
         dto.setPersonnelId(personnelId);
         dto.setAttendanceDate(date);
@@ -160,25 +184,25 @@ public class PersonnelAttendanceService {
         dto.setCheckInTime(null);
         dto.setCheckOutTime(null);
 
-        // ছুটির অগ্রাধিকার নির্ধারণ লজিক
-        if (officialHolidayName != null) {
-            dto.setStatusText(officialHolidayName.toUpperCase()); // যেমন: "EXAM VACATION", "EID HOLIDAY"
+        // ছুটির অগ্রাধিকার নির্ধারণ লজিক (ছুটি থাকলে সবার আগে সেটি দেখাবে)
+        if (leaveStatusText != null) {
+            dto.setStatusText("ON_LEAVE"); // চাইলে এখানে লিভের নামও দিতে পারেন যেমন: leave.getLeaveTypeInfo().getLeaveName()
+        } else if (officialHolidayName != null) {
+            dto.setStatusText(officialHolidayName.toUpperCase());
         } else if (isWeekend) {
-            dto.setStatusText("HOLIDAY"); // শুক্র/শনি হলে WEEKEND HOLIDAY
+            dto.setStatusText("HOLIDAY");
         } else {
-            dto.setStatusText("ABSENT"); // কোনো ছুটি না থাকলে ABSENT
+            dto.setStatusText("ABSENT");
         }
 
         return dto;
     }
 
-    // শুক্রবার এবংনিবার চেক করার মেথড
     private boolean isWeekend(LocalDate date) {
         DayOfWeek day = date.getDayOfWeek();
         return day == DayOfWeek.FRIDAY || day == DayOfWeek.SATURDAY;
     }
 
-    // লুপের নির্দিষ্ট তারিখটি কোনো সরকারি ছুটির রেঞ্জের মধ্যে পড়ে কি না তা চেক করার মেথড
     private String getOfficialHolidayName(LocalDate date, List<HolidayInfo> officialHolidays) {
         for (HolidayInfo holiday : officialHolidays) {
             if (!date.isBefore(holiday.getStartDate()) && !date.isAfter(holiday.getEndDate())) {

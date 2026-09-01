@@ -72,4 +72,10 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequestInfo,L
     );
 
     List<LeaveRequestInfo> findByPersonnelInfoIdAndStatus(Long personnelInfoId, LeaveStatus status);
+
+    List<LeaveRequestInfo> findByApprovedStartDateLessThanEqualAndApprovedEndDateGreaterThanEqualAndStatus(
+            LocalDate endDate,
+            LocalDate startDate,
+            LeaveStatus status
+    );
 }

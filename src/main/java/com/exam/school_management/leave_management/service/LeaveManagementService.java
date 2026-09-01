@@ -193,4 +193,9 @@ public class LeaveManagementService {
         return leaveRequestRepository.save(leaveRequestInfo);
     }
 
+
+   public List<LeaveRequestInfo> checkLeavePersonnel(LocalDate startDate, LocalDate endDate){
+        return leaveRequestRepository.findByApprovedStartDateLessThanEqualAndApprovedEndDateGreaterThanEqualAndStatus(startDate,endDate, LeaveStatus.APPROVED);
+   }
+
 }
