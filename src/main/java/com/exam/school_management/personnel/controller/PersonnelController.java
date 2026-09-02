@@ -75,6 +75,7 @@ public class PersonnelController {
             entity.setDob(dto.getDob());
             entity.setNid(dto.getNid());
             entity.setVillage(dto.getVillage());
+            entity.setIsTeacher(dto.getIsTeacher());
 
             if (isNumeric(dto.getBloodId())) entity.setBloodInfo(new BloodInfo(Long.parseLong(dto.getBloodId())));
             if (isNumeric(dto.getDistrictId())) entity.setDistrictInfo(new DistrictInfo(Long.parseLong(dto.getDistrictId())));
@@ -164,6 +165,7 @@ public class PersonnelController {
             entity.setDob(dto.getDob());
             entity.setNid(dto.getNid());
             entity.setVillage(dto.getVillage());
+            entity.setIsTeacher(dto.getIsTeacher());
 
             // ৪. ফরেন কি ম্যাপিং (Null-Safe & Type-Safe)
             if (isNumeric(dto.getBloodId())) entity.setBloodInfo(new BloodInfo(Long.parseLong(dto.getBloodId())));
@@ -204,5 +206,10 @@ public class PersonnelController {
         }
     }
 
+
+    @GetMapping("/teacher-list")
+    public List<PersonProjos> getTeacherList(){
+        return personnelService.getTeacherList();
+    }
 
 }

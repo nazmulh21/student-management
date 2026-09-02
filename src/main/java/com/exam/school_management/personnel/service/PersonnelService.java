@@ -105,4 +105,8 @@ public Optional<PersonnelInfo> findById(Long id){
     public PersonnelInfo findByIndex(String index){
         return personnelRepo.findByIndex(index);
     }
+
+    public List<PersonProjos> getTeacherList(){
+        return personnelRepo.getTeacherList();
+    }
 }

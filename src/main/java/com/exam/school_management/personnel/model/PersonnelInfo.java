@@ -53,6 +53,9 @@ public class PersonnelInfo {
     @Column(name = "signature")
     private String signatureName;
 
+    @Column(name = "is_teacher")
+    private Boolean isTeacher;
+
 
     @JsonSerialize(using = LocalDateSerializer.class)
     @JsonFormat(pattern = "dd-MM-yyyy")

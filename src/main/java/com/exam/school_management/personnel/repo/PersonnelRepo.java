@@ -38,4 +38,13 @@ public interface PersonnelRepo extends JpaRepository<PersonnelInfo,Long> {
             "p.designationInfo.designation)"+
             "FROM PersonnelInfo p ")
     List<PersonProjos> getPersonList();
+
+
+    @Query("SELECT new com.exam.school_management.personnel.dto.PersonProjos(" +
+            "p.id, " +
+            "p.name, " +
+            "p.subjectInfo.subjectName, " +
+            "p.designationInfo.designation) " +
+            "FROM PersonnelInfo p WHERE p.isTeacher = true")
+    List<PersonProjos> getTeacherList();
 }

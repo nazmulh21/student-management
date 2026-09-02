@@ -21,6 +21,7 @@ public class PersonnelDTO {
     private String email;
     private String father;
     private String mother;
+    private Boolean isTeacher;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate joinDate;
