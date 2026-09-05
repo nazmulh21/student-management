@@ -36,4 +36,7 @@ public class RoutineInfo {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "hour_id")
     private HourInfo hourInfo;
+
+    @Column(name = "year")
+    private String year;
 }

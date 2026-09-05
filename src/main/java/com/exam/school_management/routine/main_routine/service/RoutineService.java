@@ -12,6 +12,7 @@ import com.exam.school_management.subjects.model.SubjectInfo;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.time.Year;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +37,8 @@ public class RoutineService {
            entity.setSubjectInfo(new SubjectInfo(dto.getSubjectId()));
            entity.setDayInfo(new DayInfo(dto.getDayId()));
            entity.setHourInfo(new HourInfo(dto.getHourId()));
+           String currentYear = Year.now().toString();
+           entity.setYear(currentYear);
            list.add(entity);
        }
        return routineRepo.saveAll(list);
@@ -48,7 +51,7 @@ public class RoutineService {
 
 
     public List<RoutineProjos> getGroupedRoutine() {
-        List<RoutineInfo> routineList = routineRepo.findAllRoutineWithDetails();
+        List<RoutineInfo> routineList = routineRepo.findAllRoutineWithDetails(Year.now().toString());
 
         Map<String, List<RoutineInfo>> groupedMap = routineList.stream()
                 .collect(Collectors.groupingBy(r ->

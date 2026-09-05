@@ -6,6 +6,7 @@ import com.exam.school_management.personnel.model.PersonnelInfo;
 import com.exam.school_management.routine.days.model.DayInfo;
 import com.exam.school_management.routine.hour.model.HourInfo;
 import com.exam.school_management.routine.main_routine.dto.SubstituteDTO;
+import com.exam.school_management.routine.main_routine.dto.TeacherGapReportDTO;
 import com.exam.school_management.routine.main_routine.model.SubstituteInfo;
 import com.exam.school_management.routine.main_routine.repo.SubstituteRepo;
 import com.exam.school_management.subjects.model.SubjectInfo;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -51,4 +53,31 @@ public class SubstituteService {
     public List<SubstituteInfo> getTodayGapClass(){
         return substituteRepo.findAllBySubstituteDateOrderByHourInfoIdAsc(LocalDate.now());
     }
+
+    public List<SubstituteInfo> getPendingGapList(Long substituteId){
+        return substituteRepo.getPendingGapList(substituteId,LocalDate.now());
+    }
+
+    public boolean updateStatus(Long id, String status) {
+        Optional<SubstituteInfo> optionalSubstituteInfo = substituteRepo.findById(id);
+
+        if (optionalSubstituteInfo.isPresent()) {
+            SubstituteInfo substituteInfo = optionalSubstituteInfo.get();
+
+            // ফ্রন্টএন্ড থেকে আসা স্ট্যাটাস ("ACCEPTED" বা "REJECTED") সেট করা হচ্ছে
+            substituteInfo.setStatus(status);
+
+            // ডেটাবেসে সেভ করা হচ্ছে
+            substituteRepo.save(substituteInfo);
+            return true;
+        }
+
+        return false; // যদি আইডি অনুযায়ী রেকর্ড না পাওয়া যায়
+    }
+
+    public List<TeacherGapReportDTO> generateReport(LocalDate startDate, LocalDate endDate) {
+        return substituteRepo.getTeacherGapReportByDateRange(startDate, endDate);
+    }
+
+
 }

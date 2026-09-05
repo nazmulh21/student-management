@@ -6,6 +6,8 @@ import com.exam.school_management.leave_management.model.LeaveRequestInfo;
 import com.exam.school_management.leave_management.service.LeaveManagementService;
 import com.exam.school_management.personnel.model.PersonnelInfo;
 import com.exam.school_management.personnel.service.PersonnelService;
+import com.exam.school_management.routine.main_routine.model.SubstituteInfo;
+import com.exam.school_management.routine.main_routine.service.SubstituteService;
 import com.exam.school_management.students.model.StudentInfo;
 import com.exam.school_management.students.service.StudentService;
 import org.springframework.http.ResponseEntity;
@@ -24,12 +26,14 @@ public class DashboardController {
     private final PersonnelService personnelService;
     private final StudentService studentService;
     private final ExpenseService expenseService;
+    private final SubstituteService substituteService;
 
-    public DashboardController(LeaveManagementService leaveManagementService, PersonnelService personnelService, StudentService studentService, ExpenseService expenseService) {
+    public DashboardController(LeaveManagementService leaveManagementService, PersonnelService personnelService, StudentService studentService, ExpenseService expenseService, SubstituteService substituteService) {
         this.leaveManagementService = leaveManagementService;
         this.personnelService = personnelService;
         this.studentService = studentService;
         this.expenseService = expenseService;
+        this.substituteService = substituteService;
     }
 
 
@@ -42,11 +46,13 @@ public class DashboardController {
         List<PersonnelInfo> personnelList=personnelService.getPersonnelList();
         List<StudentInfo> allStudent=studentService.getAllActiveStudent(year);
         List<ExpenseInfo> getAllPendingExpenseList=expenseService.getPendingList();
+        List<SubstituteInfo> getAllPendingGapClass=substituteService.getPendingGapList(personnelId);
         dashboardDTO.setSentBackRequests(sentBackList);
         dashboardDTO.setLeaveRequests(leaveRequests);
         dashboardDTO.setPersonnelList(personnelList);
         dashboardDTO.setAllActiveStudents(allStudent);
         dashboardDTO.setAllPendingExpenses(getAllPendingExpenseList);
+        dashboardDTO.setAllPendingGapClass(getAllPendingGapClass);
        return ResponseEntity.ok(dashboardDTO);
 
     }
