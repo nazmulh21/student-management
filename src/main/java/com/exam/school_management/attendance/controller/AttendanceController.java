@@ -97,7 +97,7 @@ public class AttendanceController {
 
             // শিক্ষকের নাম ও পদবি তৈরি করা
             String teacherName = personnelInfo.getName() + " - " + personnelInfo.getDesignationInfo().getDesignation();
-
+            Long id=personnelInfo.getId();
             // ২. ক্লায়েন্টের আসল আইপি অ্যাড্রেস বের করা
             String clientIp = getClientIpAddress(request);
 
@@ -110,6 +110,7 @@ public class AttendanceController {
             // ৫. রেসপন্স ডেটা তৈরি করা (attendanceDTO এবং teacherName একসাথে পাঠানোর জন্য Map ব্যবহার করা হয়েছে)
             Map<String, Object> response = new HashMap<>();
             response.put("teacherName", teacherName);
+            response.put("id", id);
             response.put("attendance", attendanceDTO);
 
             // ৬. সফল হলে রেসপন্স রিটার্ন করা
