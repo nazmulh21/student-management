@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import java.time.LocalDate;
 
 @Table(name = "personnel_info")
@@ -52,6 +55,7 @@ public class PersonnelInfo {
 
     @Column(name = "signature")
     private String signatureName;
+
 
     @Column(name = "is_teacher")
     private Boolean isTeacher;

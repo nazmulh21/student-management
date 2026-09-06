@@ -15,6 +15,8 @@ import com.exam.school_management.scholarship.model.ScholarshipInfo;
 import com.exam.school_management.scholarship.repo.ScholarshipRepo;
 import com.exam.school_management.students.dto.StudentProjos;
 import com.exam.school_management.students.dto.StudentsPromoteDTO;
+import com.exam.school_management.students.model.StudentImage;
+import com.exam.school_management.students.repo.StudentImageRepo;
 import com.exam.school_management.students.repo.StudentRepo;
 import com.exam.school_management.subjects.model.SubjectInfo;
 import com.exam.school_management.subjects.repo.SubjectRepo;
@@ -29,7 +31,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
@@ -54,11 +55,12 @@ public class StudentService {
     private final GroupRepo groupRepo;
     private final ReligionRepo religionRepo;
     private final SubjectRepo subjectRepo;
+    private final StudentImageRepo studentImageRepo;
 
     private final String UPLOAD_DIR = "D:/projects/school_management/student-photos/";
 
     public StudentService(StudentRepo studentRepo, ClassRepo classRepo,
-                          DistrictRepo districtRepo, ThanaRepo thanaRepo, UnionRepo unionRepo, BloodService bloodService, ScholarshipRepo scholarshipRepo, GroupRepo groupRepo, ReligionRepo religionRepo, SubjectRepo subjectRepo) {
+                          DistrictRepo districtRepo, ThanaRepo thanaRepo, UnionRepo unionRepo, BloodService bloodService, ScholarshipRepo scholarshipRepo, GroupRepo groupRepo, ReligionRepo religionRepo, SubjectRepo subjectRepo, StudentImageRepo studentImageRepo) {
         this.studentRepo = studentRepo;
         this.classRepo = classRepo;
         this.districtRepo = districtRepo;
@@ -69,6 +71,7 @@ public class StudentService {
         this.groupRepo = groupRepo;
         this.religionRepo = religionRepo;
         this.subjectRepo = subjectRepo;
+        this.studentImageRepo = studentImageRepo;
     }
 
     public ClassInfo getClassById(Long classId) {
@@ -101,12 +104,13 @@ public class StudentService {
     public StudentInfo updateStudent(String uId, Long academicYear, MultipartFile image, String studentName, Date stuDOB, String father,
                                      String fatherNID,
                                      String mother, String motherNID, String mobile, Long classId, Long roll, Long bloodId,
-                                     Long districtCode, // 🤝 Stays clean as Long
-                                     Long thanaCode,    // 🤝 Stays clean as Long
-                                     Long unionCode,    // 🤝 Stays clean as Long
+                                     Long districtCode,
+                                     Long thanaCode,
+                                     Long unionCode,
                                      String village, String boardRegNo,
-                                     String birthRegNo,Long groupId,Long optionalId,Long religionId, Long scholarshipId, BigDecimal tuitionFeesFacilities,boolean isActive, String guardianName, String guardianMobile,
+                                     String birthRegNo, Long groupId, Long optionalId, Long religionId, Long scholarshipId, BigDecimal tuitionFeesFacilities, boolean isActive, String guardianName, String guardianMobile,
                                      String guardianAddress) throws RuntimeException, IOException {
+
         // 1. Verify that the targeting profile record exists
         StudentInfo existingStudent = studentRepo.findByStuUniqueIdAndAcademicYear(uId, academicYear);
         if (existingStudent == null) {
@@ -119,52 +123,19 @@ public class StudentService {
 
         Long admissionTest = Status.ADMISSION.getValue().longValue();
 
-        // 3. Business Rule Validation: Fixed type evaluation mismatch (comparing Long with Long)
+        // 3. Business Rule Validation
         if (roll == null && !admissionTest.equals(classId)) {
             throw new RuntimeException("Roll number is required for the chosen academic class standard selection.");
         }
 
-        BloodInfo bloodInfo = null;
-        if (bloodId != null) {
-            bloodInfo = bloodService.findById(bloodId).orElse(null);
-        }
-
-        // 4. Safely Fetch Address Entities
-        DistrictInfo districtInfo = null;
-        if (districtCode != null) {
-            districtInfo = districtRepo.findById(districtCode).orElse(null);
-        }
-
-        ThanaInfo thanaInfo = null;
-        if (thanaCode != null) {
-            thanaInfo = thanaRepo.findById(thanaCode).orElse(null);
-        }
-
-        UnionInfo unionInfo = null;
-        if (unionCode != null) {
-            unionInfo = unionRepo.findById(unionCode).orElse(null);
-        }
-
-        ScholarshipInfo scholarshipInfo = null;
-        if (scholarshipId != null) {
-            scholarshipInfo = scholarshipRepo.findById(scholarshipId).orElse(null);
-        }
-
-        GroupInfo groupInfo = null;
-        if (groupId != null) {
-            groupInfo = groupRepo.findById(groupId).orElse(null);
-        }
-
-        SubjectInfo subjectInfo = null;
-        if (optionalId != null) {
-            subjectInfo = subjectRepo.findById(optionalId).orElse(null);
-        }
-
-
-        ReligionInfo religionInfo = null;
-        if (religionId != null) {
-            religionInfo = religionRepo.findById(religionId).orElse(null);
-        }
+        BloodInfo bloodInfo = bloodId != null ? bloodService.findById(bloodId).orElse(null) : null;
+        DistrictInfo districtInfo = districtCode != null ? districtRepo.findById(districtCode).orElse(null) : null;
+        ThanaInfo thanaInfo = thanaCode != null ? thanaRepo.findById(thanaCode).orElse(null) : null;
+        UnionInfo unionInfo = unionCode != null ? unionRepo.findById(unionCode).orElse(null) : null;
+        ScholarshipInfo scholarshipInfo = scholarshipId != null ? scholarshipRepo.findById(scholarshipId).orElse(null) : null;
+        GroupInfo groupInfo = groupId != null ? groupRepo.findById(groupId).orElse(null) : null;
+        SubjectInfo subjectInfo = optionalId != null ? subjectRepo.findById(optionalId).orElse(null) : null;
+        ReligionInfo religionInfo = religionId != null ? religionRepo.findById(religionId).orElse(null) : null;
 
         // 5. Update properties
         existingStudent.setStudentName(studentName);
@@ -177,12 +148,10 @@ public class StudentService {
         existingStudent.setClassInfo(classInfo);
         existingStudent.setRoll(roll);
         existingStudent.setBloodInfo(bloodInfo);
-
         existingStudent.setDistrictInfo(districtInfo);
         existingStudent.setThanaInfo(thanaInfo);
         existingStudent.setUnionInfo(unionInfo);
         existingStudent.setScholarshipInfo(scholarshipInfo);
-
         existingStudent.setVillage(village);
         existingStudent.setBoardRegNo(boardRegNo);
         existingStudent.setBirthRegNo(birthRegNo);
@@ -193,40 +162,25 @@ public class StudentService {
         existingStudent.setGuardianMobile(guardianMobile);
         existingStudent.setGuardianAddress(guardianAddress);
 
-        if(tuitionFeesFacilities !=null){
+        if (tuitionFeesFacilities != null) {
             existingStudent.setTuitionFeesFacilities(tuitionFeesFacilities);
         }
 
-        Optional.ofNullable(isActive)
-                .ifPresent(active -> {
-                    existingStudent.setIsActive(active);
+        Optional.ofNullable(isActive).ifPresent(existingStudent::setIsActive);
 
-                });
-
-        // 6. Image Management Block
+        // 6. Image Management Block (Updated for StudentImage Entity)
         if (image != null && !image.isEmpty()) {
-            String targetFolderPath = UPLOAD_DIR + existingStudent.getStuUniqueId() + "/";
-            File directory = new File(targetFolderPath);
-
-            if (!directory.exists()) {
-                directory.mkdirs();
-            } else {
-                File[] oldFiles = directory.listFiles();
-                if (oldFiles != null) {
-                    for (File oldFile : oldFiles) {
-                        oldFile.delete();
-                    }
+            try {
+                StudentImage studentImage = studentImageRepo.findByStuUniqueId(existingStudent.getStuUniqueId());
+                if (studentImage == null) {
+                    studentImage = new StudentImage();
+                    studentImage.setStuUniqueId(existingStudent.getStuUniqueId());
                 }
+                studentImage.setImageData(image.getBytes());
+                studentImageRepo.save(studentImage);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to process student image bytes: " + e.getMessage());
             }
-
-            String rawFileName = image.getOriginalFilename();
-            if (rawFileName == null || rawFileName.trim().isEmpty()) {
-                throw new RuntimeException("Invalid image file target label context uploaded.");
-            }
-
-            Path destinationPath = Paths.get(targetFolderPath + rawFileName);
-            Files.write(destinationPath, image.getBytes());
-            existingStudent.setFileName(rawFileName);
         }
 
         // 7. Save changes
@@ -244,9 +198,10 @@ public class StudentService {
         StudentInfo student = studentRepo.findByStuUniqueIdAndAcademicYear(uId, academicYear);
 
         studentRepo.delete(student);
+        studentImageRepo.deleteByStuUniqueId(uId);
 
         // 3. Delete only the image file, leaving the folder alone
-        deleteSpecificImage(student.getStuUniqueId(), student.getFileName());
+       // deleteSpecificImage(student.getStuUniqueId(), student.getFileName());
         return null;
     }
 

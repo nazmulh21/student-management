@@ -26,15 +26,15 @@ public class PersonnelService {
         this.personnelRepo = personnelRepo;
     }
 
-public PersonnelInfo doSave(PersonnelInfo personnelInfo){
+   public PersonnelInfo doSave(PersonnelInfo personnelInfo){
         return personnelRepo.save(personnelInfo);
-}
+   }
 
-public List<PersonnelInfo> getList(){
+   public List<PersonnelInfo> getList(){
         return personnelRepo.findAll();
 }
 
-public Optional<PersonnelInfo> findById(Long id){
+   public Optional<PersonnelInfo> findById(Long id){
         return personnelRepo.findById(id);
 }
 

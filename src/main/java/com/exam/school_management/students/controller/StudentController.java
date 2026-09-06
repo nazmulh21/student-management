@@ -10,7 +10,8 @@ import com.exam.school_management.group.model.GroupInfo;
 import com.exam.school_management.religion.model.ReligionInfo;
 import com.exam.school_management.students.dto.StudentProjos;
 import com.exam.school_management.students.dto.StudentsPromoteDTO;
-import com.exam.school_management.students.service.FileUploadService;
+import com.exam.school_management.students.model.StudentImage;
+import com.exam.school_management.students.repo.StudentImageRepo;
 import com.exam.school_management.subjects.model.SubjectInfo;
 import com.exam.school_management.thana.model.ThanaInfo;
 import com.exam.school_management.union.model.UnionInfo;
@@ -45,12 +46,14 @@ public class StudentController {
 
     private final StudentService studentService;
     private final AdmissionService admissionService;
+    private final StudentImageRepo studentImageRepository; // Entity এর বদলে Repository ইনজেক্ট করা হলো
 
-
-    public StudentController(StudentService studentService, AdmissionService admissionService) {
+    public StudentController(StudentService studentService, AdmissionService admissionService, StudentImageRepo studentImageRepository) {
         this.studentService = studentService;
         this.admissionService = admissionService;
+        this.studentImageRepository = studentImageRepository;
     }
+
     @PreAuthorize("hasAnyAuthority('STUDENT_REGISTRATION')")
     @PostMapping("/save")
     public ResponseEntity<?> doSave(@ModelAttribute StudentDTO dto) throws IOException, ParseException {
@@ -68,134 +71,135 @@ public class StudentController {
 
         StudentInfo entity = new StudentInfo();
         MultipartFile multipartFile = dto.getImage();
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
+        SimpleDateFormat datePrefixFormat = new SimpleDateFormat("ddMMyy");
+        String fullDatePrefix = datePrefixFormat.format(new Date());
 
-        if (multipartFile != null && !multipartFile.isEmpty()) {
-            String fileName = StringUtils.cleanPath(multipartFile.getOriginalFilename());
+        // ইমেজ থাকুক বা না থাকুক, স্টুডেন্টের সাধারণ তথ্যগুলো সেট করা হচ্ছে
+        entity.setRoll(dto.getRoll());
+        entity.setStudentName(dto.getStudentName());
+        entity.setFather(dto.getFather());
+        entity.setFatherNID(dto.getFatherNID());
+        entity.setMother(dto.getMother());
+        entity.setMotherNID(dto.getMotherNID());
+        entity.setMobile(dto.getMobile());
+        entity.setIsActive(true);
+        entity.setInsDate(new Date());
 
-            SimpleDateFormat datePrefixFormat = new SimpleDateFormat("ddMMyy");
-            SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
-            String fullDatePrefix = datePrefixFormat.format(new Date());
-
-            entity.setFileName(fileName);
-            entity.setRoll(dto.getRoll());
-            entity.setStudentName(dto.getStudentName());
-            entity.setFather(dto.getFather());
-            entity.setFatherNID(dto.getFatherNID());
-            entity.setMother(dto.getMother());
-            entity.setMotherNID(dto.getMotherNID());
-            entity.setMobile(dto.getMobile());
-            entity.setIsActive(true);
-            entity.setInsDate(new Date());
+        if (dto.getStuDOB() != null && !dto.getStuDOB().isEmpty()) {
             entity.setStuDOB(formatter.parse(dto.getStuDOB()));
-            entity.setBirthRegNo(dto.getBirthRegNo());
-            entity.setBoardRegNo(dto.getBoardRegNo());
-            entity.setAcademicYear(year);
-            entity.setVillage(dto.getVillage());
-            entity.setGuardianName(dto.getGuardianName());
-            entity.setGuardianMobile(dto.getGuardianMobile());
-            entity.setGuardianAddress(dto.getGuardianAddress());
-            entity.setInsBy(dto.getUserId());
-
-            ClassInfo classInfo = new ClassInfo(dto.getClassId());
-            entity.setClassInfo(classInfo);
-
-            if (dto.getBloodId() != null) {
-                entity.setBloodInfo(new BloodInfo(dto.getBloodId()));
-            }
-            if (dto.getDistrictId() != null) {
-                entity.setDistrictInfo(new DistrictInfo(dto.getDistrictId()));
-            }
-            if (dto.getThanaId() != null) {
-                entity.setThanaInfo(new ThanaInfo(dto.getThanaId()));
-            }
-            if (dto.getUnionId() != null) {
-                entity.setUnionInfo(new UnionInfo(dto.getUnionId()));
-            }
-            if (dto.getGroupId() != null) {
-                entity.setGroupInfo(new GroupInfo(dto.getGroupId()));
-            }
-            if (dto.getOptionalId() != null) {
-                entity.setSubjectInfo(new SubjectInfo(dto.getOptionalId()));
-            }
-
-            if (dto.getReligionId() != null) {
-                entity.setReligionInfo(new ReligionInfo(dto.getReligionId()));
-            }
-
-            ClassInfo selectedClass = studentService.getClassById(classId);
-            Long classCode = (long) 1;
-            if (selectedClass != null && selectedClass.getId() != null) {
-                classCode = selectedClass.getId();
-            }
-
-            String classSerial = studentService.getNextClassSerial(year, classId);
-            String uId = fullDatePrefix + classCode + classSerial;
-
-            // 🎯 FIXED PRE-CHECK LOOP: Handles rapid serial submission generation collisions
-            int loopCounter = 1;
-            while (admissionService.existsByStuId(uId)) {
-                try {
-                    int numericSerial = Integer.parseInt(classSerial) + loopCounter;
-                    String newSerialString = String.format("%03d", numericSerial);
-                    uId = fullDatePrefix + classCode + newSerialString;
-                } catch (NumberFormatException e) {
-                    // Fallback to millisecond safety token if sequence parsing encounters unexpected characters
-                    long fallbackToken = System.currentTimeMillis() % 1000;
-                    uId = fullDatePrefix + classCode + String.format("%03d", fallbackToken);
-                    break;
-                }
-                loopCounter++;
-            }
-
-            entity.setStuUniqueId(uId);
-
-            try {
-                entity = studentService.doSaveStudent(entity);
-
-                String uploadDir = "D:/projects/school_management/student-photos/" + entity.getStuUniqueId();
-                FileUploadService.saveFile(uploadDir, fileName, multipartFile);
-
-
-
-                Long admissionTest = Status.ADMISSION.getValue().longValue();
-                if(dto.getClassId().equals(admissionTest)){
-                    AdmissionInfo admission = new AdmissionInfo();
-                    admission.setStuId(entity.getStuUniqueId()); // Use resolved safe unique ID
-                    admission.setStuName(dto.getStudentName());
-                    admission.setFather(dto.getFather());
-                    admission.setAcademicYear(year);
-                    admission.setActive(true);
-                    admission.setCreateDate(new Date());
-
-                    admissionService.doSave(admission);
-                }
-
-                return ResponseEntity.ok(entity);
-
-            } catch (DataIntegrityViolationException e) {
-                return ResponseEntity
-                        .status(HttpStatus.BAD_REQUEST)
-                        .body("This Student Already Exist");
-            } catch (Exception e) {
-                return ResponseEntity
-                        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body("An error occurred while saving the record: " + e.getMessage());
-            }
         }
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Image file is required.");
+        entity.setBirthRegNo(dto.getBirthRegNo());
+        entity.setBoardRegNo(dto.getBoardRegNo());
+        entity.setAcademicYear(year);
+        entity.setVillage(dto.getVillage());
+        entity.setGuardianName(dto.getGuardianName());
+        entity.setGuardianMobile(dto.getGuardianMobile());
+        entity.setGuardianAddress(dto.getGuardianAddress());
+        entity.setInsBy(dto.getUserId());
+
+        ClassInfo classInfo = new ClassInfo(dto.getClassId());
+        entity.setClassInfo(classInfo);
+
+        if (dto.getBloodId() != null) {
+            entity.setBloodInfo(new BloodInfo(dto.getBloodId()));
+        }
+        if (dto.getDistrictId() != null) {
+            entity.setDistrictInfo(new DistrictInfo(dto.getDistrictId()));
+        }
+        if (dto.getThanaId() != null) {
+            entity.setThanaInfo(new ThanaInfo(dto.getThanaId()));
+        }
+        if (dto.getUnionId() != null) {
+            entity.setUnionInfo(new UnionInfo(dto.getUnionId()));
+        }
+        if (dto.getGroupId() != null) {
+            entity.setGroupInfo(new GroupInfo(dto.getGroupId()));
+        }
+        if (dto.getOptionalId() != null) {
+            entity.setSubjectInfo(new SubjectInfo(dto.getOptionalId()));
+        }
+        if (dto.getReligionId() != null) {
+            entity.setReligionInfo(new ReligionInfo(dto.getReligionId()));
+        }
+
+        // যদি ইমেজ দেওয়া হয়ে থাকে, তবে ফাইলের নাম সেট করা হচ্ছে
+        if (multipartFile != null && !multipartFile.isEmpty()) {
+            String fileName = StringUtils.cleanPath(multipartFile.getOriginalFilename());
+            entity.setFileName(fileName);
+        }
+
+        ClassInfo selectedClass = studentService.getClassById(classId);
+        Long classCode = (long) 1;
+        if (selectedClass != null && selectedClass.getId() != null) {
+            classCode = selectedClass.getId();
+        }
+
+        String classSerial = studentService.getNextClassSerial(year, classId);
+        String uId = fullDatePrefix + classCode + classSerial;
+
+        int loopCounter = 1;
+        while (admissionService.existsByStuId(uId)) {
+            try {
+                int numericSerial = Integer.parseInt(classSerial) + loopCounter;
+                String newSerialString = String.format("%03d", numericSerial);
+                uId = fullDatePrefix + classCode + newSerialString;
+            } catch (NumberFormatException e) {
+                long fallbackToken = System.currentTimeMillis() % 1000;
+                uId = fullDatePrefix + classCode + String.format("%03d", fallbackToken);
+                break;
+            }
+            loopCounter++;
+        }
+
+        entity.setStuUniqueId(uId);
+
+        try {
+            // ১. প্রথমে স্টুডেন্ট ইনফো ডাটাবেজে সেভ করা হলো
+            entity = studentService.doSaveStudent(entity);
+
+            // ২. যদি ইমেজ ফাইল থাকে, তবেই আলাদা টেবিলে বাইনারি ডাটা (byte[]) হিসেবে ইমেজ সেভ করা হবে
+            if (multipartFile != null && !multipartFile.isEmpty()) {
+                StudentImage studentImage = new StudentImage();
+                studentImage.setImageData(multipartFile.getBytes());
+                studentImage.setStuUniqueId(entity.getStuUniqueId());
+                studentImageRepository.save(studentImage);
+            }
+
+            Long admissionTest = Status.ADMISSION.getValue().longValue();
+            if(dto.getClassId().equals(admissionTest)){
+                AdmissionInfo admission = new AdmissionInfo();
+                admission.setStuId(entity.getStuUniqueId());
+                admission.setStuName(dto.getStudentName());
+                admission.setFather(dto.getFather());
+                admission.setAcademicYear(year);
+                admission.setActive(true);
+                admission.setCreateDate(new Date());
+
+                admissionService.doSave(admission);
+            }
+
+            return ResponseEntity.ok(entity);
+
+        } catch (DataIntegrityViolationException e) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body("This Student Already Exist");
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred while saving the record: " + e.getMessage());
+        }
     }
 
     @GetMapping("/list")
     public List<StudentInfo> getAllStudents() {
-        //...........   //example of get user id
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (principal instanceof CustomUserDetails) {
             Long userId = ((CustomUserDetails) principal).getId();
             System.out.println("বর্তমানে লগইন করা ইউজারের আইডি: " + userId);
         }
-        //.....................end............
-
         return studentService.getAllStudent();
     }
 
@@ -207,6 +211,7 @@ public class StudentController {
         }
         return ResponseEntity.notFound().build();
     }
+
     @PreAuthorize("hasAnyAuthority('UPDATE_STUDENT')")
     @PutMapping("/update/{uId}/{academicYear}")
     public ResponseEntity<?> updateStudent(
@@ -280,25 +285,18 @@ public class StudentController {
         return ResponseEntity.ok(list);
     }
 
-
     @GetMapping("/verify/{stuUniqueId}")
     public ResponseEntity<?> verifyStudent(@PathVariable String stuUniqueId) {
         Long year = (long) java.time.YearMonth.now().getYear();
-
-        // 1. Try finding them for the current year
         StudentInfo stu = studentService.findByStuUniqueIdAndAcademicYear(stuUniqueId, year);
 
         if (stu == null) {
-            // 2. Check if they exist at all in any other year
             Optional<StudentInfo> olderStu = studentService.findByUniqueId(stuUniqueId);
-
-            if (olderStu != null) {
+            if (olderStu != null && olderStu.isPresent()) {
                 return ResponseEntity
                         .status(HttpStatus.BAD_REQUEST)
                         .body("Student did not renew registration for the current year (" + year + "). last seen in: " + olderStu.get().getAcademicYear());
             }
-
-            // 3. Fallback if they completely don't exist
             return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
                     .body("Active student record not found for the current academic year (" + year + ").");
@@ -323,9 +321,6 @@ public class StudentController {
             @PathVariable String classParam,
             @PathVariable String yearParam
     ){
-        System.out.println("classParam: " + classParam);
-        System.out.println("yearParam: " + yearParam);
-
         Long parsedClass = classParam.equalsIgnoreCase("all") ? null : Long.valueOf(classParam);
         Long parsedYear = yearParam.equalsIgnoreCase("all") ? null : Long.valueOf(yearParam);
 
@@ -349,7 +344,7 @@ public class StudentController {
                         .body("এই ক্লাস, রোল এবং শিক্ষাবর্ষের রেকর্ড ইতিমধ্যে ডাটাবেজে সংরক্ষিত আছে।");
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("ডাটা সেভ করতে গিয়ে একটি সমস্যা হয়েছে।");
+                    .body("ডাটা সেভ করতে গিয়ে একটি সমস্যা হয়েছে।");
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Server problem: " + ex.getMessage());
@@ -358,17 +353,26 @@ public class StudentController {
 
     @GetMapping(value = "/all/{classId}/{academicYear}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getAllStudent(@PathVariable Long classId, @PathVariable Long academicYear){
-        System.out.println("classId "+classId);
-        System.out.println("academicYear "+academicYear);
         List<StudentInfo> getList = studentService.getStudentListTestimonial(classId, academicYear);
-        System.out.println("dataaa"+getList);
         return ResponseEntity.ok(getList);
     }
 
-
     @GetMapping("/names/{classId}/{academicYear}")
     public List<StudentProjos> getNames(@PathVariable Long classId, @PathVariable Long academicYear){
-        List<StudentProjos> list=studentService.getStudentNames(classId,academicYear);
-        return list;
+        return studentService.getStudentNames(classId, academicYear);
+    }
+
+
+
+    @GetMapping("/image/{stuUniqueId}")
+    public ResponseEntity<byte[]> getStudentImage(@PathVariable String stuUniqueId) {
+        StudentImage studentImage = studentImageRepository.findByStuUniqueId(stuUniqueId);
+
+        if (studentImage != null && studentImage.getImageData() != null) {
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_JPEG) // অথবা IMAGE_PNG (প্রয়োজন অনুযায়ী)
+                    .body(studentImage.getImageData());
+        }
+        return ResponseEntity.notFound().build();
     }
 }
