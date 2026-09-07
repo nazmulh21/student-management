@@ -3,6 +3,7 @@ package com.exam.school_management.personnel.dto;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 public class PersonnelAttendanceDTO {
@@ -13,8 +14,8 @@ public class PersonnelAttendanceDTO {
     private LocalDate attendanceDate;
 
     // LocalTime এর পরিবর্তে String করা হলো
-    private String checkInTime;
-    private String checkOutTime;
+    private LocalDateTime checkInTime;
+    private LocalDateTime checkOutTime;
 
     private String statusText;
     private String inIpAddress;

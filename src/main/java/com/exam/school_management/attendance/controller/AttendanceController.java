@@ -5,6 +5,7 @@ import com.exam.school_management.attendance.model.AttendanceInfo;
 import com.exam.school_management.attendance.service.AttendanceService;
 import com.exam.school_management.enums.AttendanceStatus;
 import com.exam.school_management.personnel.dto.PersonnelAttendanceDTO;
+import com.exam.school_management.personnel.model.PersonnelAttendanceInfo;
 import com.exam.school_management.personnel.model.PersonnelInfo;
 import com.exam.school_management.personnel.service.PersonnelAttendanceService;
 import com.exam.school_management.personnel.service.PersonnelService;
@@ -89,31 +90,51 @@ public class AttendanceController {
             // ১. trimmedId দিয়ে PersonnelInfo খুঁজে বের করা
             PersonnelInfo personnelInfo = personnelService.findByIndex(trimmedId);
 
-            // নাল চেকটি আগে করা হয়েছে যেন NullPointerException না ঘটে
             if (personnelInfo == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body("Personnel not found with ID: " + trimmedId);
             }
 
-            // শিক্ষকের নাম ও পদবি তৈরি করা
-            String teacherName = personnelInfo.getName() + " - " + personnelInfo.getDesignationInfo().getDesignation();
-            Long id=personnelInfo.getId();
-            // ২. ক্লায়েন্টের আসল আইপি অ্যাড্রেস বের করা
+            // শিক্ষকের নাম ও পদবি তৈরি করা (সেফটি চেকসহ)
+            String designation = (personnelInfo.getDesignationInfo() != null)
+                    ? personnelInfo.getDesignationInfo().getDesignation()
+                    : "N/A";
+            String teacherName = personnelInfo.getName() + " - " + designation;
+            Long id = personnelInfo.getId();
+
+            // ২. ১ মিনিটের ডাবল পাঞ্চ চেক করার জন্য আজকের সর্বশেষ রেকর্ড আনা
+            PersonnelAttendanceInfo lastRecord = personnelAttendanceService.findLastAttendanceForToday(id);
+            LocalDateTime now = LocalDateTime.now();
+
+            if (lastRecord != null) {
+                // যদি চেক-আউট করা থাকে তবে চেক-আউটের সময়, আর না থাকলে চেক-ইনের সময় ধরবে
+                LocalDateTime timeToCheck = (lastRecord.getCheckOutTime() != null)
+                        ? lastRecord.getCheckOutTime()
+                        : lastRecord.getCheckInTime();
+
+                long secondsBetween = java.time.Duration.between(timeToCheck, now).getSeconds();
+                if (secondsBetween < 60) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body("দয়া করে একটু অপেক্ষা করুন! ইতিমধ্যে ১ মিনিটের মধ্যে আপনার উপস্থিতি রেকর্ড করা হয়েছে।");
+                }
+            }
+
+            // ৩. ক্লায়েন্টের আসল আইপি অ্যাড্রেস বের করা
             String clientIp = getClientIpAddress(request);
 
-            // ৩. বর্তমান তারিখ নেওয়া
+            // ৪. বর্তমান তারিখ নেওয়া
             LocalDate today = LocalDate.now();
 
-            // ৪. সার্ভিস মেথডে কল করা
-            PersonnelAttendanceDTO attendanceDTO = personnelAttendanceService.processToggle(personnelInfo.getId(), today, clientIp);
+            // ৫. সার্ভিস মেথডে কল করা
+            PersonnelAttendanceDTO attendanceDTO = personnelAttendanceService.processToggle(id, today, clientIp);
 
-            // ৫. রেসপন্স ডেটা তৈরি করা (attendanceDTO এবং teacherName একসাথে পাঠানোর জন্য Map ব্যবহার করা হয়েছে)
+            // ৬. রেসপন্স ডেটা তৈরি করা
             Map<String, Object> response = new HashMap<>();
             response.put("teacherName", teacherName);
             response.put("id", id);
             response.put("attendance", attendanceDTO);
 
-            // ৬. সফল হলে রেসপন্স রিটার্ন করা
+            // ৭. সফল হলে রেসপন্স রিটার্ন করা
             return ResponseEntity.ok(response);
 
         } catch (IllegalStateException | NoSuchElementException e) {

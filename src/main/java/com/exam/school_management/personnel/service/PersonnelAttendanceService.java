@@ -1,5 +1,6 @@
 package com.exam.school_management.personnel.service;
 
+import com.exam.school_management.attendance.model.AttendanceInfo;
 import com.exam.school_management.enums.AttendanceStatus;
 import com.exam.school_management.enums.LeaveStatus; // এটি ইম্পোর্ট করুন
 import com.exam.school_management.leave_management.model.LeaveRequestInfo; // এটি ইম্পোর্ট করুন
@@ -14,10 +15,7 @@ import com.exam.school_management.personnel.repo.PersonnelRepo;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -82,29 +80,31 @@ public class PersonnelAttendanceService {
     }
 
     // বাটন ক্লিকের মাধ্যমে চেক-ইন বা চেক-আউট টগল করার লজিক
+    // বাটন ক্লিকের মাধ্যমে চেক-ইন বা চেক-আউট টগল করার লজিক
     @Transactional
     public PersonnelAttendanceDTO processToggle(Long personnelId, LocalDate date, String ipAddress) {
-        Optional<PersonnelAttendanceInfo> existing = personnelAttendanceRepo.findByPersonnelInfoIdAndAttendanceDate(personnelId, date);
-
-        String nowStr = LocalTime.now(BD_ZONE).format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"));
+        // আজকের সর্বশেষ রেকর্ডটি খুঁজে বের করা
+        PersonnelAttendanceInfo lastRecord = findLastAttendanceForToday(personnelId);
+        LocalDateTime now = LocalDateTime.now();
         PersonnelAttendanceInfo entity;
 
-        if (existing.isEmpty()) {
+        if (lastRecord == null || lastRecord.getCheckOutTime() != null) {
+            // ১. যদি আজকের কোনো রেকর্ড না থাকে অথবা আগের রেকর্ডটি ইতিমধ্যে কমপ্লিট (Check-out) হয়ে থাকে,
+            // তবে নতুন একটি চেক-ইন এন্ট্রি তৈরি হবে।
             entity = new PersonnelAttendanceInfo();
             PersonnelInfo info = personnelRepo.findById(personnelId)
                     .orElseThrow(() -> new NoSuchElementException("Personnel not found with ID: " + personnelId));
 
             entity.setPersonnelInfo(info);
             entity.setAttendanceDate(date);
-            entity.setCheckInTime(nowStr);
+            entity.setCheckInTime(now);
             entity.setInIpAddress(ipAddress);
             entity.setStatus("PRESENT");
         } else {
-            entity = existing.get();
-            if (entity.getCheckOutTime() != null) {
-                throw new IllegalStateException("Attendance already completed for today!");
-            }
-            entity.setCheckOutTime(nowStr);
+            // ২. যদি আজকের রেকর্ড থাকে এবং চেক-আউট না করা থাকে (অর্থাৎ বর্তমানে ইন অবস্থায় আছেন),
+            // তবে এটি চেক-আউট হিসেবে আপডেট হবে।
+            entity = lastRecord;
+            entity.setCheckOutTime(now);
             entity.setOutIpAddress(ipAddress);
         }
 
@@ -165,9 +165,9 @@ public class PersonnelAttendanceService {
         dto.setInIpAddress(info.getInIpAddress());
         dto.setOutIpAddress(info.getOutIpAddress());
 
-        if (info.getCheckOutTime() != null && !info.getCheckOutTime().isEmpty()) {
+        if (info.getCheckOutTime() != null) {
             dto.setStatusText("COMPLETED");
-        } else if (info.getCheckInTime() != null && !info.getCheckInTime().isEmpty()) {
+        } else if (info.getCheckInTime() != null) {
             dto.setStatusText("CHECKED_IN");
         } else {
             dto.setStatusText("NOT_MARKED");
@@ -211,4 +211,20 @@ public class PersonnelAttendanceService {
         }
         return null;
     }
+
+
+    public PersonnelAttendanceInfo findLastAttendanceForToday(Long personnelId) {
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime endOfDay = LocalDate.now().atTime(LocalTime.MAX);
+
+        List<PersonnelAttendanceInfo> list = personnelAttendanceRepo.findTodayAttendancesForPersonnel(personnelId, startOfDay, endOfDay);
+
+        if (list != null && !list.isEmpty()) {
+            return list.get(0); // আজকের সর্বশেষ রেকর্ড
+        }
+        return null;
+    }
+
+
+
 }

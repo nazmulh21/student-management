@@ -1,10 +1,14 @@
 package com.exam.school_management.personnel.repo;
 
+import com.exam.school_management.attendance.model.AttendanceInfo;
 import com.exam.school_management.personnel.model.PersonnelAttendanceInfo;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,4 +23,14 @@ public interface PersonnelAttendanceRepo extends JpaRepository<PersonnelAttendan
 
     // নির্দিষ্ট ডেট রেঞ্জের সব রেকর্ড তুলে আনার জন্য
     List<PersonnelAttendanceInfo> findByAttendanceDateBetween(LocalDate startDate, LocalDate endDate);
+
+    @Query("SELECT a FROM PersonnelAttendanceInfo a " +
+            "WHERE a.personnelInfo.id = :personnelId " +
+            "AND a.checkInTime >= :startOfDay AND a.checkInTime <= :endOfDay " +
+            "ORDER BY a.checkInTime DESC")
+    List<PersonnelAttendanceInfo> findTodayAttendancesForPersonnel(
+            @Param("personnelId") Long personnelId,
+            @Param("startOfDay") LocalDateTime startOfDay,
+            @Param("endOfDay") LocalDateTime endOfDay
+    );
 }
