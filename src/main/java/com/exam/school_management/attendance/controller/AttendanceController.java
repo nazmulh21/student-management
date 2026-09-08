@@ -1,6 +1,7 @@
 package com.exam.school_management.attendance.controller;
 
 import com.exam.school_management.attendance.dto.StudentAttendanceDTO;
+import com.exam.school_management.attendance.dto.StudentAttendanceReportDTO;
 import com.exam.school_management.attendance.model.AttendanceInfo;
 import com.exam.school_management.attendance.service.AttendanceService;
 import com.exam.school_management.enums.AttendanceStatus;
@@ -12,6 +13,7 @@ import com.exam.school_management.personnel.service.PersonnelService;
 import com.exam.school_management.students.model.StudentInfo;
 import com.exam.school_management.students.service.StudentService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.*;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/attendance")
@@ -200,7 +203,8 @@ public class AttendanceController {
                 attendanceInfo = new AttendanceInfo();
                 attendanceInfo.setStudentInfo(studentInfo);
                 attendanceInfo.setCheckIn(now);
-                attendanceInfo.setStatus(AttendanceStatus.PRESENT);
+                attendanceInfo.setAttendanceDate(LocalDate.now());
+                attendanceInfo.setStatus("PRESENT");
                 message = "Check-in successful";
 
             } else {
@@ -215,7 +219,7 @@ public class AttendanceController {
                 attendanceInfo.setCheckOut(now);
 
                 if (attendanceInfo.getStatus() == null) {
-                    attendanceInfo.setStatus(AttendanceStatus.PRESENT);
+                    attendanceInfo.setStatus("PRESENT");
                 }
 
                 message = "Check-out successful";
@@ -236,5 +240,33 @@ public class AttendanceController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Server Error: " + e.getMessage());
         }
+    }
+
+
+    @GetMapping("/student/report")
+    public ResponseEntity<List<StudentAttendanceReportDTO>> getAttendanceReport(
+            @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(value = "studentId", required = false) Long studentId,
+            @RequestParam(value = "status", required = false) String status) { // 👈 নতুন স্ট্যাটাস প্যারামিটার যোগ করা হয়েছে
+
+        List<StudentAttendanceReportDTO> reportList = attendanceService.getAttendanceReport(startDate, endDate);
+        System.out.println("report::"+reportList);
+
+        // ১. শিক্ষার্থী আইডি দিয়ে ফিল্টার (যদি থাকে)
+        if (studentId != null) {
+            reportList = reportList.stream()
+                    .filter(dto -> dto.getStudentId().equals(studentId))
+                    .collect(Collectors.toList());
+        }
+
+        // ২. স্ট্যাটাস দিয়ে ফিল্টার (যেমন: ABSENT, COMPLETED ইত্যাদি)
+        if (status != null && !status.trim().isEmpty()) {
+            reportList = reportList.stream()
+                    .filter(dto -> status.equalsIgnoreCase(dto.getStatusText()))
+                    .collect(Collectors.toList());
+        }
+
+        return ResponseEntity.ok(reportList);
     }
 }

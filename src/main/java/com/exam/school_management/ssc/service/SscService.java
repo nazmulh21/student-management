@@ -33,7 +33,7 @@ public class SscService {
 
     public List<SSCResponseDTO> getStudentsByPassData(SSCPassDataDTO dto) {
         // ১. আইডিগুলোর লিস্ট দিয়ে ডেটাবেজ থেকে স্টুডেন্টদের খুঁজে আনা
-        List<StudentInfo> students = studentRepo.findAllByIdIn(dto.getStudentIds());
+        List<StudentInfo> students = studentRepo.findAllByIdInOrderByRollAsc(dto.getStudentIds());
 
         // ২. প্রাপ্ত ডেটাকে নির্দিষ্ট ফরম্যাটে বা একই লিস্টে রূপান্তর করা এবং academicYear সেট করা
         return students.stream().map(student -> {

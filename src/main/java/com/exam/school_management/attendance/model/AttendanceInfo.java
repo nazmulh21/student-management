@@ -5,6 +5,8 @@ import com.exam.school_management.students.model.StudentInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime; // সময় সেভ করার জন্য LocalDateTime ব্যবহার করা ভালো
 
 @Entity
@@ -29,9 +31,11 @@ public class AttendanceInfo {
     @Column(name = "check_out")
     private LocalDateTime checkOut; // চেক-আউট শুরুতে নাল থাকতে পারে, তাই nullable = false ہটি সরিয়ে দেওয়া হলো
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private AttendanceStatus status;
+    private String status;
+
+    @Column(name = "date")
+    private LocalDate attendanceDate;
 
     @Column(name = "remarks")
     private String remarks;

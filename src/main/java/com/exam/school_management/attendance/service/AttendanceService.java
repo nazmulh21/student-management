@@ -1,9 +1,14 @@
 package com.exam.school_management.attendance.service;
 
 import com.exam.school_management.attendance.dto.StudentAttendanceDTO;
+import com.exam.school_management.attendance.dto.StudentAttendanceReportDTO;
 import com.exam.school_management.attendance.model.AttendanceInfo;
 import com.exam.school_management.attendance.repo.AttendanceRepo;
 import com.exam.school_management.enums.AttendanceStatus;
+import com.exam.school_management.personnel.model.HolidayInfo;
+import com.exam.school_management.personnel.repo.HolidayRepo;
+import com.exam.school_management.students.model.StudentInfo;
+import com.exam.school_management.students.repo.StudentRepo;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import org.springframework.core.io.ClassPathResource;
@@ -12,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -22,9 +28,14 @@ import java.util.stream.Collectors;
 @Transactional
 public class AttendanceService {
     private final AttendanceRepo attendanceRepo;
+    private final HolidayRepo holidayRepo;
+    private final StudentRepo studentRepo;
 
-    public AttendanceService(AttendanceRepo attendanceRepo) {
+
+    public AttendanceService(AttendanceRepo attendanceRepo, HolidayRepo holidayRepo, StudentRepo studentRepo) {
         this.attendanceRepo = attendanceRepo;
+        this.holidayRepo = holidayRepo;
+        this.studentRepo = studentRepo;
     }
 
     public List<AttendanceInfo> save(List<AttendanceInfo> attendanceInfos) {
@@ -153,9 +164,9 @@ public class AttendanceService {
 
             // স্ট্রিং থেকে AttendanceStatus Enum-এ রূপান্তর (যেমন: "PRESENT" বা "ABSENT")
             if (dto.getStatus() != null && !dto.getStatus().isEmpty()) {
-                info.setStatus(AttendanceStatus.valueOf(dto.getStatus()));
+                info.setStatus(dto.getStatus());
             } else {
-                info.setStatus(AttendanceStatus.PRESENT); // ডিফল্ট স্ট্যাটাস
+                info.setStatus("PRESENT"); // ডিফল্ট স্ট্যাটাস
             }
 
             info.setRemarks(dto.getRemarks());
@@ -165,5 +176,90 @@ public class AttendanceService {
 
         // ডাটাবেজে একসাথে সব সেভ করা
         return attendanceRepo.saveAll(attendanceList);
+    }
+
+    private StudentAttendanceReportDTO convertToDTO(AttendanceInfo info) {
+        StudentAttendanceReportDTO dto = new StudentAttendanceReportDTO();
+        dto.setStudentId(info.getStudentInfo().getId());
+        dto.setStatus(info.getStatus());
+        dto.setAttendanceDate(info.getAttendanceDate());
+        dto.setCheckInTime(info.getCheckIn());
+        dto.setCheckOutTime(info.getCheckOut());
+
+
+        if (info.getCheckOut() != null) {
+            dto.setStatusText("COMPLETED");
+        } else if (info.getCheckIn() != null) {
+            dto.setStatusText("CHECKED_IN");
+        } else {
+            dto.setStatusText("NOT_MARKED");
+        }
+        return dto;
+    }
+
+    private boolean isWeekend(LocalDate date) {
+        DayOfWeek day = date.getDayOfWeek();
+        return day == DayOfWeek.FRIDAY || day == DayOfWeek.SATURDAY;
+    }
+
+    private String getOfficialHolidayName(LocalDate date, List<HolidayInfo> officialHolidays) {
+        for (HolidayInfo holiday : officialHolidays) {
+            if (!date.isBefore(holiday.getStartDate()) && !date.isAfter(holiday.getEndDate())) {
+                return holiday.getHolidayName();
+            }
+        }
+        return null;
+    }
+
+    private StudentAttendanceReportDTO createEmptyAttendanceDTO(Long studentId, LocalDate date, boolean isWeekend, String officialHolidayName) {
+        StudentAttendanceReportDTO dto = new StudentAttendanceReportDTO();
+        dto.setStudentId(studentId);
+        dto.setAttendanceDate(date);
+        dto.setStatus(String.valueOf(AttendanceStatus.ABSENT)); // অথবা আপনার DTO অনুযায়ী শুধু "ABSENT"
+        dto.setCheckInTime(null);
+        dto.setCheckOutTime(null);
+
+        // অফিশিয়াল ছুটি, সাপ্তাহিক ছুটি এবং সাধারণ অনুপস্থিতির লজিক
+        if (officialHolidayName != null) {
+            dto.setStatusText(officialHolidayName.toUpperCase());
+        } else if (isWeekend) {
+            dto.setStatusText("HOLIDAY");
+        } else {
+            dto.setStatusText("ABSENT");
+        }
+
+        return dto;
+    }
+
+
+    public List<StudentAttendanceReportDTO> getAttendanceReport(LocalDate startDate, LocalDate endDate) {
+        List<AttendanceInfo> attendanceList = attendanceRepo.findByAttendanceDateBetween(startDate, endDate);
+        List<HolidayInfo> officialHolidays = holidayRepo.findByStartDateLessThanEqualAndEndDateGreaterThanEqual(endDate, startDate);
+
+        List<StudentInfo> allStudents = studentRepo.findAll();
+        List<StudentAttendanceReportDTO> reportList = new ArrayList<>();
+
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+            LocalDate currentDate = date;
+            boolean isWeekend = isWeekend(currentDate);
+            String officialHolidayName = getOfficialHolidayName(currentDate, officialHolidays);
+
+            // নির্দিষ্ট তারিখের ছাত্রীদের উপস্থিতির ম্যাপ তৈরি
+            Map<Long, AttendanceInfo> dailyAttendanceMap = attendanceList.stream()
+                    .filter(info -> info.getAttendanceDate().equals(currentDate))
+                    .collect(Collectors.toMap(info -> info.getStudentInfo().getId(), info -> info, (a, b) -> a));
+
+            // সকল ছাত্রীর জন্য লুপ
+            for (StudentInfo student : allStudents) {
+                StudentAttendanceReportDTO dto;
+                if (dailyAttendanceMap.containsKey(student.getId())) {
+                    dto = convertToDTO(dailyAttendanceMap.get(student.getId()));
+                } else {
+                    dto = createEmptyAttendanceDTO(student.getId(), currentDate, isWeekend, officialHolidayName);
+                }
+                reportList.add(dto);
+            }
+        }
+        return reportList;
     }
 }
