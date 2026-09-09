@@ -12,6 +12,7 @@ import com.exam.school_management.students.repo.StudentRepo;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -181,6 +182,7 @@ public class AttendanceService {
     private StudentAttendanceReportDTO convertToDTO(AttendanceInfo info) {
         StudentAttendanceReportDTO dto = new StudentAttendanceReportDTO();
         dto.setStudentId(info.getStudentInfo().getId());
+        dto.setMobile(info.getStudentInfo().getMobile());
         dto.setStatus(info.getStatus());
         dto.setAttendanceDate(info.getAttendanceDate());
         dto.setCheckInTime(info.getCheckIn());
@@ -211,11 +213,12 @@ public class AttendanceService {
         return null;
     }
 
-    private StudentAttendanceReportDTO createEmptyAttendanceDTO(Long studentId, LocalDate date, boolean isWeekend, String officialHolidayName) {
+    private StudentAttendanceReportDTO createEmptyAttendanceDTO(Long studentId,String mobile, LocalDate date, boolean isWeekend, String officialHolidayName) {
         StudentAttendanceReportDTO dto = new StudentAttendanceReportDTO();
         dto.setStudentId(studentId);
         dto.setAttendanceDate(date);
         dto.setStatus(String.valueOf(AttendanceStatus.ABSENT)); // অথবা আপনার DTO অনুযায়ী শুধু "ABSENT"
+        dto.setMobile(mobile);
         dto.setCheckInTime(null);
         dto.setCheckOutTime(null);
 
@@ -236,7 +239,7 @@ public class AttendanceService {
         List<AttendanceInfo> attendanceList = attendanceRepo.findByAttendanceDateBetween(startDate, endDate);
         List<HolidayInfo> officialHolidays = holidayRepo.findByStartDateLessThanEqualAndEndDateGreaterThanEqual(endDate, startDate);
 
-        List<StudentInfo> allStudents = studentRepo.findAll();
+        List<StudentInfo> allStudents = studentRepo.findAll(Sort.by(Sort.Direction.ASC, "roll"));
         List<StudentAttendanceReportDTO> reportList = new ArrayList<>();
 
         for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
@@ -255,7 +258,7 @@ public class AttendanceService {
                 if (dailyAttendanceMap.containsKey(student.getId())) {
                     dto = convertToDTO(dailyAttendanceMap.get(student.getId()));
                 } else {
-                    dto = createEmptyAttendanceDTO(student.getId(), currentDate, isWeekend, officialHolidayName);
+                    dto = createEmptyAttendanceDTO(student.getId(),student.getMobile(), currentDate, isWeekend, officialHolidayName);
                 }
                 reportList.add(dto);
             }

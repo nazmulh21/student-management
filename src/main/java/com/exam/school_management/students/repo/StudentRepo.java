@@ -77,7 +77,7 @@ public interface StudentRepo extends JpaRepository<StudentInfo, Long> {
     List<StudentInfo> findAllByIdInOrderByRollAsc(List<Long> ids);
 
 
-    @Query("SELECT new com.exam.school_management.students.dto.StudentProjos(s.id,s.studentName) " +
+    @Query("SELECT new com.exam.school_management.students.dto.StudentProjos(s.id,s.studentName,s.roll,s.classInfo.className) " +
             "FROM StudentInfo s " +
             "WHERE s.classInfo.id = :classId " +
             "AND s.academicYear = :academicYear")

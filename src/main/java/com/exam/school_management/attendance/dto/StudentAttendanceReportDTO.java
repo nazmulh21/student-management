@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 public class StudentAttendanceReportDTO {
     private Long studentId;
     private String status;
+    private String mobile;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate attendanceDate;
