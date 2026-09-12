@@ -4,13 +4,14 @@ import com.exam.school_management.attendance.dto.StudentAttendanceDTO;
 import com.exam.school_management.attendance.dto.StudentAttendanceReportDTO;
 import com.exam.school_management.attendance.model.AttendanceInfo;
 import com.exam.school_management.attendance.service.AttendanceService;
-import com.exam.school_management.enums.AttendanceStatus;
 import com.exam.school_management.personnel.dto.PersonnelAttendanceDTO;
 import com.exam.school_management.personnel.model.PersonnelAttendanceInfo;
 import com.exam.school_management.personnel.model.PersonnelInfo;
 import com.exam.school_management.personnel.service.PersonnelAttendanceService;
 import com.exam.school_management.personnel.service.PersonnelService;
+import com.exam.school_management.students.model.StudentImage;
 import com.exam.school_management.students.model.StudentInfo;
+import com.exam.school_management.students.repo.StudentImageRepo;
 import com.exam.school_management.students.service.StudentService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -28,14 +29,18 @@ import java.util.stream.Collectors;
 public class AttendanceController {
     private final AttendanceService attendanceService;
     private final PersonnelService personnelService;
-    private PersonnelAttendanceService personnelAttendanceService;
-    private StudentService studentService;
+    private final PersonnelAttendanceService personnelAttendanceService;
+    private final StudentService studentService;
+    private final StudentImageRepo studentImageRepo;
 
-    public AttendanceController(AttendanceService attendanceService, PersonnelService personnelService, PersonnelAttendanceService personnelAttendanceService,StudentService studentService) {
+
+    public AttendanceController(AttendanceService attendanceService, PersonnelService personnelService, PersonnelAttendanceService personnelAttendanceService, StudentService studentService,  StudentImageRepo studentImageRepo) {
         this.attendanceService = attendanceService;
         this.personnelService = personnelService;
         this.personnelAttendanceService = personnelAttendanceService;
         this.studentService=studentService;
+        this.studentImageRepo = studentImageRepo;
+
     }
 
 
@@ -240,6 +245,20 @@ public class AttendanceController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Server Error: " + e.getMessage());
         }
+    }
+
+
+    @GetMapping("/student/image/{id}")
+    public ResponseEntity<byte[]> getStudentImage(@PathVariable String id) {
+        StudentImage studentImage = studentImageRepo.findByStuUniqueId(id);
+
+        if (studentImage != null && studentImage.getImageData() != null) {
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_JPEG)
+                    .body(studentImage.getImageData());
+        }
+
+        return ResponseEntity.notFound().build();
     }
 
 

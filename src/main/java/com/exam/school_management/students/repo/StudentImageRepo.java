@@ -6,6 +6,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface StudentImageRepo extends JpaRepository<StudentImage, Long> {
-    StudentImage findByStuUniqueId(String uId);
+    public StudentImage findByStuUniqueId(String uId);
     void deleteByStuUniqueId(String uId);
 }
