@@ -8,6 +8,8 @@ import com.exam.school_management.personnel.model.PersonnelInfo;
 import com.exam.school_management.personnel.service.PersonnelService;
 import com.exam.school_management.routine.main_routine.model.SubstituteInfo;
 import com.exam.school_management.routine.main_routine.service.SubstituteService;
+import com.exam.school_management.salary.received_salary.model.SalaryReceivedInfo;
+import com.exam.school_management.salary.received_salary.service.ReceivedSalaryService;
 import com.exam.school_management.students.model.StudentInfo;
 import com.exam.school_management.students.service.StudentService;
 import org.springframework.http.ResponseEntity;
@@ -27,13 +29,15 @@ public class DashboardController {
     private final StudentService studentService;
     private final ExpenseService expenseService;
     private final SubstituteService substituteService;
+    private final ReceivedSalaryService receivedSalaryService;
 
-    public DashboardController(LeaveManagementService leaveManagementService, PersonnelService personnelService, StudentService studentService, ExpenseService expenseService, SubstituteService substituteService) {
+    public DashboardController(LeaveManagementService leaveManagementService, PersonnelService personnelService, StudentService studentService, ExpenseService expenseService, SubstituteService substituteService, ReceivedSalaryService receivedSalaryService) {
         this.leaveManagementService = leaveManagementService;
         this.personnelService = personnelService;
         this.studentService = studentService;
         this.expenseService = expenseService;
         this.substituteService = substituteService;
+        this.receivedSalaryService = receivedSalaryService;
     }
 
 
@@ -47,12 +51,14 @@ public class DashboardController {
         List<StudentInfo> allStudent=studentService.getAllActiveStudent(year);
         List<ExpenseInfo> getAllPendingExpenseList=expenseService.getPendingList();
         List<SubstituteInfo> getAllPendingGapClass=substituteService.getPendingGapList(personnelId);
+        List<SalaryReceivedInfo> getAllPendingSalaryList=receivedSalaryService.getPendingIndividualList(personnelId);
         dashboardDTO.setSentBackRequests(sentBackList);
         dashboardDTO.setLeaveRequests(leaveRequests);
         dashboardDTO.setPersonnelList(personnelList);
         dashboardDTO.setAllActiveStudents(allStudent);
         dashboardDTO.setAllPendingExpenses(getAllPendingExpenseList);
         dashboardDTO.setAllPendingGapClass(getAllPendingGapClass);
+        dashboardDTO.setAllPendingSalaryList(getAllPendingSalaryList);
        return ResponseEntity.ok(dashboardDTO);
 
     }

@@ -24,6 +24,10 @@ public class SalaryReceivedInfo {
     @JoinColumn(name = "sender_id")
     private PersonnelInfo sender;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "personnel_id")
+    private PersonnelInfo personnelInfo;
+
     @Column(name = "received_salary")
     private BigDecimal receivedSalary;
 

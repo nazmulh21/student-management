@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional; // ১. এটি ইমপোর্ট করুন
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,11 +47,26 @@ public class ReceivedSalaryService {
             entity.setSalaryAndOthersHonorariumInfo(new SalaryAndOthersHonorariumInfo(dto.getSalaryId()));
             entity.setSender(new PersonnelInfo(dto.getSenderId()));
             entity.setReceivedSalary(dto.getReceivedSalary());
+            if (dto.getPersonnelId() !=null){
+                entity.setPersonnelInfo(new PersonnelInfo(dto.getPersonnelId()));
+            }
             entity.setStatus("PENDING");
             list.add(entity);
         }
 
 
         return receivedSalaryRepo.saveAll(list);
+    }
+
+    public List<SalaryReceivedInfo> getPendingIndividualList(Long personnelId){
+        return receivedSalaryRepo.getPendingSalaryList(personnelId);
+    }
+
+    public SalaryReceivedInfo received(Long recordId, Long userId){
+        SalaryReceivedInfo oldRecord=receivedSalaryRepo.findById(recordId).get();
+        oldRecord.setReceivedBy(new PersonnelInfo(userId));
+        oldRecord.setReceivedDate(LocalDate.now());
+        oldRecord.setStatus("RECEIVED");
+        return receivedSalaryRepo.save(oldRecord);
     }
 }

@@ -9,6 +9,7 @@ public class ReceivedDTO {
     private Long salaryId;
     private BigDecimal receivedSalary;
     private Long senderId;
+    private Long personnelId;
 }
 
 
