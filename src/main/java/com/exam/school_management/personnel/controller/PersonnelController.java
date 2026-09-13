@@ -277,10 +277,17 @@ public class PersonnelController {
     @GetMapping("/signature/{id}")
     public ResponseEntity<byte[]> getPersonnelSignature(@PathVariable Long id) {
         PersonnelImageInfo personnelImage = personnelImageRepo.findAllByPersonnelInfoId(id);
+        if (personnelImage == null) {
+            System.out.println("PersonnelImageInfo record NOT FOUND for ID: " + id);
+        } else if (personnelImage.getSignatureData() == null) {
+            System.out.println("SignatureData is NULL for ID: " + id);
+        } else {
+            System.out.println("Signature found! Size: " + personnelImage.getSignatureData().length);
+        }
 
-        if (personnelImage != null && personnelImage.getImageData() != null) {
+        if (personnelImage != null && personnelImage.getSignatureData() != null) {
             return ResponseEntity.ok()
-                    .contentType(MediaType.IMAGE_JPEG) // অথবা IMAGE_PNG (প্রয়োজন অনুযায়ী)
+                    .contentType(MediaType.IMAGE_PNG)
                     .body(personnelImage.getSignatureData());
         }
         return ResponseEntity.notFound().build();
