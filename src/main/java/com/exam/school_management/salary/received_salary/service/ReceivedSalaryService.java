@@ -69,4 +69,8 @@ public class ReceivedSalaryService {
         oldRecord.setStatus("RECEIVED");
         return receivedSalaryRepo.save(oldRecord);
     }
+
+    public List<SalaryReceivedInfo> getReceivedSalaryList(Long salaryTypeId,LocalDate startDate, LocalDate endDate){
+        return receivedSalaryRepo.getReceivedSalaryList(salaryTypeId,startDate,endDate);
+    }
 }

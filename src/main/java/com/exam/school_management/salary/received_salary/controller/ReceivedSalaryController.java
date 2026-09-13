@@ -6,6 +6,7 @@ import com.exam.school_management.salary.received_salary.service.ReceivedSalaryS
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -25,7 +26,6 @@ public class ReceivedSalaryController {
     @GetMapping("/pending/list/{personnelId}")
     public ResponseEntity<?> getPendingIndividualList(@PathVariable Long personnelId){
         List<SalaryReceivedInfo> list=receivedSalaryService.getPendingIndividualList(personnelId);
-        System.out.println("pending list"+list);
         return ResponseEntity.ok(list);
     }
 
@@ -34,5 +34,10 @@ public class ReceivedSalaryController {
         System.out.println("recordId"+recordId);
         System.out.println("userId"+userId);
         return ResponseEntity.ok(receivedSalaryService.received(recordId,userId));
+    }
+
+    @GetMapping("/received/list/{salaryTypeId}/{startDate}/{endDate}")
+    public ResponseEntity<?> getReceivedSalaryList(@PathVariable Long salaryTypeId,@PathVariable LocalDate startDate, @PathVariable LocalDate endDate){
+        return ResponseEntity.ok(receivedSalaryService.getReceivedSalaryList(salaryTypeId,startDate,endDate));
     }
 }
