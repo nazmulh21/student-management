@@ -18,4 +18,9 @@ public interface RoutineRepo extends JpaRepository<RoutineInfo,Long> {
 
     @Query("SELECT r FROM RoutineInfo r JOIN FETCH r.personnelInfo JOIN FETCH r.dayInfo JOIN FETCH r.hourInfo JOIN FETCH r.classInfo where r.year =:year")
     List<RoutineInfo> findAllRoutineWithDetails(String year);
+
+    @Query("SELECT r.personnelInfo FROM RoutineInfo r " +
+            "WHERE r.dayInfo.id = :dayId AND r.hourInfo.id = :nextHourId")
+    List<PersonnelInfo> findTeachersBusyInNextHour(@Param("dayId") Long dayId,
+                                                   @Param("nextHourId") Long nextHourId);
 }

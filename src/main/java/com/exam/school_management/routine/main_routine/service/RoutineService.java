@@ -6,6 +6,7 @@ import com.exam.school_management.routine.days.model.DayInfo;
 import com.exam.school_management.routine.hour.model.HourInfo;
 import com.exam.school_management.routine.main_routine.dto.RoutineDTO;
 import com.exam.school_management.routine.main_routine.dto.RoutineProjos;
+import com.exam.school_management.routine.main_routine.dto.TeacherResponseDto;
 import com.exam.school_management.routine.main_routine.model.RoutineInfo;
 import com.exam.school_management.routine.main_routine.repo.RoutineRepo;
 import com.exam.school_management.subjects.model.SubjectInfo;
@@ -13,10 +14,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.Year;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -48,6 +46,53 @@ public class RoutineService {
         public List<PersonnelInfo> getFreeTeacherList(Long dayId, Long hourId){
         return routineRepo.findAvailableTeachers(dayId,hourId);
         }
+
+
+
+    public List<TeacherResponseDto> getAvailableTeachersWithConsecutiveCheck(Long dayId, Long currentHourId, Long nextHourId) {
+
+        // ১. বর্তমান ঘণ্টায় ফাঁকা শিক্ষকদের তালিকা (আপনার RoutineRepo থেকে)
+        List<PersonnelInfo> availableTeachers = routineRepo.findAvailableTeachers(dayId, currentHourId);
+
+        // ২. পরের ঘণ্টায় যে সকল শিক্ষক ব্যস্ত আছেন তাদের তালিকা (আপনার RoutineRepo থেকে)
+        List<PersonnelInfo> busyNextHourTeachers = routineRepo.findTeachersBusyInNextHour(dayId, nextHourId);
+
+        // দ্রুত চেক করার জন্য পরের ঘণ্টার ব্যস্ত শিক্ষকদের আইডি একটি সেটে (Set) নিয়ে নেওয়া
+        Set<Long> busyNextHourTeacherIds = busyNextHourTeachers.stream()
+                .map(PersonnelInfo::getId)
+                .collect(Collectors.toSet());
+
+        List<TeacherResponseDto> responseList = new ArrayList<>();
+
+        for (PersonnelInfo teacher : availableTeachers) {
+            TeacherResponseDto dto = new TeacherResponseDto();
+            dto.setId(teacher.getId());
+            dto.setName(teacher.getName());
+
+            // পদবী থাকলে সেটি সেট করা
+            String designationName = "";
+            if (teacher.getDesignationInfo() != null) {
+                designationName = teacher.getDesignationInfo().getDesignation();
+                dto.setDesignationName(designationName);
+            }
+
+            // ৩. চেক করা শিক্ষক মহাশয় পরের ঘণ্টায়ও রুটিনে আছেন কি না
+            if (busyNextHourTeacherIds.contains(teacher.getId())) {
+                dto.setDisplayName("🔄 [এখানে পরের ঘণ্টায়ও ক্লাস আছে] " + teacher.getName()
+                        + (!designationName.isEmpty() ? " (" + designationName + ")" : ""));
+                dto.setHasConsecutiveClass(true);
+            } else {
+                dto.setDisplayName(teacher.getName()
+                        + (!designationName.isEmpty() ? " (" + designationName + ")" : ""));
+                dto.setHasConsecutiveClass(false);
+            }
+
+            responseList.add(dto);
+        }
+
+        return responseList;
+    }
+
 
 
     public List<RoutineProjos> getGroupedRoutine() {

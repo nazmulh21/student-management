@@ -3,6 +3,7 @@ package com.exam.school_management.routine.main_routine.controller;
 import com.exam.school_management.personnel.model.PersonnelInfo;
 import com.exam.school_management.routine.main_routine.dto.RoutineDTO;
 import com.exam.school_management.routine.main_routine.dto.RoutineProjos;
+import com.exam.school_management.routine.main_routine.dto.TeacherResponseDto;
 import com.exam.school_management.routine.main_routine.service.RoutineService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,5 +34,16 @@ public class RoutineController {
     public ResponseEntity<List<RoutineProjos>> getGroupedRoutine() {
         List<RoutineProjos> groupedRoutines = routineService.getGroupedRoutine();
         return ResponseEntity.ok(groupedRoutines);
+    }
+
+
+    @GetMapping("/available-teachers")
+    public ResponseEntity<List<TeacherResponseDto>> getAvailableTeachers(
+            @RequestParam Long dayId,
+            @RequestParam Long currentHourId,
+            @RequestParam Long nextHourId) {
+
+        List<TeacherResponseDto> teachers = routineService.getAvailableTeachersWithConsecutiveCheck(dayId, currentHourId, nextHourId);
+        return ResponseEntity.ok(teachers);
     }
 }
