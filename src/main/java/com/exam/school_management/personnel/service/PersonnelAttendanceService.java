@@ -57,8 +57,9 @@ public class PersonnelAttendanceService {
         Map<Long, LeaveRequestInfo> leaveMap = approvedLeaves.stream()
                 .collect(Collectors.toMap(info -> info.getPersonnelInfo().getId(), info -> info, (a, b) -> a));
 
+        // ডুপ্লিকেট এন্ট্রি হ্যান্ডেল করার জন্য মার্জ ফাংশন (a, b) -> a যোগ করা হয়েছে
         Map<Long, PersonnelAttendanceInfo> attendanceMap = attendanceList.stream()
-                .collect(Collectors.toMap(info -> info.getPersonnelInfo().getId(), info -> info));
+                .collect(Collectors.toMap(info -> info.getPersonnelInfo().getId(), info -> info, (a, b) -> a));
 
         Map<Long, PersonnelAttendanceDTO> finalMap = new HashMap<>();
         boolean isWeekend = isWeekend(date);
@@ -80,7 +81,6 @@ public class PersonnelAttendanceService {
     }
 
     // বাটন ক্লিকের মাধ্যমে চেক-ইন বা চেক-আউট টগল করার লজিক
-    // বাটন ক্লিকের মাধ্যমে চেক-ইন বা চেক-আউট টগল করার লজিক
     @Transactional
     public PersonnelAttendanceDTO processToggle(Long personnelId, LocalDate date, String ipAddress) {
         // আজকের সর্বশেষ রেকর্ডটি খুঁজে বের করা
@@ -89,7 +89,7 @@ public class PersonnelAttendanceService {
         PersonnelAttendanceInfo entity;
 
         if (lastRecord == null || lastRecord.getCheckOutTime() != null) {
-            // ১. যদি আজকের কোনো রেকর্ড না থাকে অথবা আগের রেকর্ডটি ইতিমধ্যে কমপ্লিট (Check-out) হয়ে থাকে,
+            // ১. যদি আজকের কোনো রেকর্ড না থাকে অথবা আগের রেকর্ডটি ইতিমধ্যে কমপ্লিট (Check-out) হয়ে থাকে,
             // তবে নতুন একটি চেক-ইন এন্ট্রি তৈরি হবে।
             entity = new PersonnelAttendanceInfo();
             PersonnelInfo info = personnelRepo.findById(personnelId)
@@ -101,7 +101,7 @@ public class PersonnelAttendanceService {
             entity.setInIpAddress(ipAddress);
             entity.setStatus("PRESENT");
         } else {
-            // ২. যদি আজকের রেকর্ড থাকে এবং চেক-আউট না করা থাকে (অর্থাৎ বর্তমানে ইন অবস্থায় আছেন),
+            // ২. যদি আজকের রেকর্ড থাকে এবং চেক-আউট না করা থাকে (অর্থাৎ বর্তমানে ইন অবস্থায় আছেন),
             // তবে এটি চেক-আউট হিসেবে আপডেট হবে।
             entity = lastRecord;
             entity.setCheckOutTime(now);
@@ -186,7 +186,7 @@ public class PersonnelAttendanceService {
 
         // ছুটির অগ্রাধিকার নির্ধারণ লজিক (ছুটি থাকলে সবার আগে সেটি দেখাবে)
         if (leaveStatusText != null) {
-            dto.setStatusText("ON_LEAVE"); // চাইলে এখানে লিভের নামও দিতে পারেন যেমন: leave.getLeaveTypeInfo().getLeaveName()
+            dto.setStatusText("ON_LEAVE");
         } else if (officialHolidayName != null) {
             dto.setStatusText(officialHolidayName.toUpperCase());
         } else if (isWeekend) {
@@ -212,7 +212,6 @@ public class PersonnelAttendanceService {
         return null;
     }
 
-
     public PersonnelAttendanceInfo findLastAttendanceForToday(Long personnelId) {
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         LocalDateTime endOfDay = LocalDate.now().atTime(LocalTime.MAX);
@@ -224,7 +223,4 @@ public class PersonnelAttendanceService {
         }
         return null;
     }
-
-
-
 }

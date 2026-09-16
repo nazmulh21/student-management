@@ -147,7 +147,9 @@ public class PersonnelController {
 
     @GetMapping("/get-list") //only id and name list here..
     public List<PersonProjos> getListIdAndName(){
-        return personnelService.list();
+        List<PersonProjos> list=personnelService.list();
+        System.out.println("personnel data::"+list);
+        return list;
     }
 
 

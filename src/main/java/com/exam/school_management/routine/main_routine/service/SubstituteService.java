@@ -42,8 +42,18 @@ public class SubstituteService {
         return substituteRepo.save(entity);
     }
 
-    public boolean alreadyGapClassAssigned(Long dayId, Long hourId, Long classId, LocalDate today){
-        return substituteRepo.existsByDayInfoIdAndHourInfoIdAndClassInfoIdAndSubstituteDate(dayId,hourId,classId,today);
+    public boolean alreadyGapClassAssigned(Long dayId, Long hourId, Long classId, LocalDate today) {
+        // ১. শুধু একটিভ (REJECTED নয়, অর্থাৎ PENDING বা ACCEPTED) রেকর্ড খুঁজছি
+        Optional<SubstituteInfo> activeAssignment = substituteRepo.findActiveAssignment(dayId, hourId, classId, today);
+
+        // ২. যদি একটিভ রেকর্ড পাওয়া যায়, তার মানে স্লটটি খালি নেই (আটকে দিতে হবে -> true)
+        if (activeAssignment.isPresent()) {
+            return true;
+        }
+
+        // ৩. যদি একটিভ রেকর্ড না থাকে (হয় ফাঁকা, না হয় আগেরটা REJECTED হয়ে গেছে),
+        // তবে নতুন শিক্ষক অ্যাসাইন করতে দেবো -> false
+        return false;
     }
 
     public void doDelete(Long id){

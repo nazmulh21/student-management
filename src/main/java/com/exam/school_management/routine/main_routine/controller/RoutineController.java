@@ -21,7 +21,7 @@ public class RoutineController {
 
     @PostMapping("/save")
     public ResponseEntity<?> saves(@RequestBody List<RoutineDTO> dtos){
-        System.out.print("routine data save::"+dtos);
+       // System.out.print("routine data save::"+dtos);
         return ResponseEntity.ok(routineService.saves(dtos));
     }
 
@@ -41,9 +41,10 @@ public class RoutineController {
     public ResponseEntity<List<TeacherResponseDto>> getAvailableTeachers(
             @RequestParam Long dayId,
             @RequestParam Long currentHourId,
-            @RequestParam Long nextHourId) {
+            @RequestParam Long nextHourId,
+            @RequestParam Long classId) { // একই ক্লাসের জন্য classId যোগ করা হলো
 
-        List<TeacherResponseDto> teachers = routineService.getAvailableTeachersWithConsecutiveCheck(dayId, currentHourId, nextHourId);
+        List<TeacherResponseDto> teachers = routineService.getAvailableTeachersWithConsecutiveCheck(dayId, currentHourId, nextHourId, classId);
         return ResponseEntity.ok(teachers);
     }
 }

@@ -20,7 +20,8 @@ public interface RoutineRepo extends JpaRepository<RoutineInfo,Long> {
     List<RoutineInfo> findAllRoutineWithDetails(String year);
 
     @Query("SELECT r.personnelInfo FROM RoutineInfo r " +
-            "WHERE r.dayInfo.id = :dayId AND r.hourInfo.id = :nextHourId")
-    List<PersonnelInfo> findTeachersBusyInNextHour(@Param("dayId") Long dayId,
-                                                   @Param("nextHourId") Long nextHourId);
+            "WHERE r.dayInfo.id = :dayId AND r.hourInfo.id = :nextHourId AND r.classInfo.id = :classId")
+    List<PersonnelInfo> findTeachersBusyInNextHourForSameClass(@Param("dayId") Long dayId,
+                                                               @Param("nextHourId") Long nextHourId,
+                                                               @Param("classId") Long classId);
 }

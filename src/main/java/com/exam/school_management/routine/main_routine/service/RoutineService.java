@@ -49,15 +49,15 @@ public class RoutineService {
 
 
 
-    public List<TeacherResponseDto> getAvailableTeachersWithConsecutiveCheck(Long dayId, Long currentHourId, Long nextHourId) {
+    public List<TeacherResponseDto> getAvailableTeachersWithConsecutiveCheck(Long dayId, Long currentHourId, Long nextHourId, Long currentClassId) {
 
-        // ১. বর্তমান ঘণ্টায় ফাঁকা শিক্ষকদের তালিকা (আপনার RoutineRepo থেকে)
+        // ১. বর্তমান ঘণ্টায় ফাঁকা শিক্ষকদের তালিকা
         List<PersonnelInfo> availableTeachers = routineRepo.findAvailableTeachers(dayId, currentHourId);
 
-        // ২. পরের ঘণ্টায় যে সকল শিক্ষক ব্যস্ত আছেন তাদের তালিকা (আপনার RoutineRepo থেকে)
-        List<PersonnelInfo> busyNextHourTeachers = routineRepo.findTeachersBusyInNextHour(dayId, nextHourId);
+        // ২. পরের ঘণ্টায় ঠিক *একই ক্লাসে* যে সকল শিক্ষক ব্যস্ত আছেন তাদের তালিকা
+        List<PersonnelInfo> busyNextHourTeachers = routineRepo.findTeachersBusyInNextHourForSameClass(dayId, nextHourId, currentClassId);
 
-        // দ্রুত চেক করার জন্য পরের ঘণ্টার ব্যস্ত শিক্ষকদের আইডি একটি সেটে (Set) নিয়ে নেওয়া
+        // দ্রুত চেক করার জন্য আইডিগুলো একটি সেটে (Set) নিয়ে নেওয়া
         Set<Long> busyNextHourTeacherIds = busyNextHourTeachers.stream()
                 .map(PersonnelInfo::getId)
                 .collect(Collectors.toSet());
@@ -76,9 +76,9 @@ public class RoutineService {
                 dto.setDesignationName(designationName);
             }
 
-            // ৩. চেক করা শিক্ষক মহাশয় পরের ঘণ্টায়ও রুটিনে আছেন কি না
+            // ৩. চেক করা শিক্ষক মহাশয়ের পরের ঘণ্টায়ও *একই ক্লাসে* ক্লাস আছে কি না
             if (busyNextHourTeacherIds.contains(teacher.getId())) {
-                dto.setDisplayName("🔄 [এখানে পরের ঘণ্টায়ও ক্লাস আছে] " + teacher.getName()
+                dto.setDisplayName("🔄 [পরের ঘণ্টায় এই ক্লাসেই ক্লাস আছে] " + teacher.getName()
                         + (!designationName.isEmpty() ? " (" + designationName + ")" : ""));
                 dto.setHasConsecutiveClass(true);
             } else {
