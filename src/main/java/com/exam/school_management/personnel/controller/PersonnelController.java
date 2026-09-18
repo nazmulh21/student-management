@@ -142,7 +142,9 @@ public class PersonnelController {
     @PreAuthorize("hasAnyAuthority('PERSONNEL_LIST')")
     @GetMapping("/list")
     public List<PersonnelInfo> getList(){
-        return personnelService.getPersonnelList();
+        List<PersonnelInfo> list=personnelService.getPersonnelList();
+        System.out.println("all personnel list designation wise"+list);
+        return list;
     }
 
     @GetMapping("/get-list") //only id and name list here..
@@ -294,5 +296,6 @@ public class PersonnelController {
         }
         return ResponseEntity.notFound().build();
     }
+
 
 }
