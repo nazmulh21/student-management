@@ -48,4 +48,14 @@ public interface PersonnelRepo extends JpaRepository<PersonnelInfo,Long> {
             "p.designationInfo.designation) " +
             "FROM PersonnelInfo p WHERE p.isTeacher = true")
     List<PersonProjos> getTeacherList();
+
+
+    @Query("SELECT new com.exam.school_management.personnel.dto.PersonProjos(" +
+            "p.id, " +
+            "p.name, " +
+            "p.designationInfo.designation) " +
+            "FROM PersonnelInfo p LEFT JOIN p.jobStatusInfo j " +
+            "WHERE (j.status IS NULL OR j.status NOT IN ('Retired', 'Transferred', 'Resigned')) AND p.isMPO=true")
+    List<PersonProjos> getOnlyMPOPersonList();
+
 }

@@ -61,6 +61,9 @@ public class PersonnelInfo {
     private Boolean isTeacher;
 
 
+    @Column(name = "is_mpo")
+    private Boolean isMPO;
+
     @JsonSerialize(using = LocalDateSerializer.class)
     @JsonFormat(pattern = "dd-MM-yyyy")
     @Column(name = "join_date")

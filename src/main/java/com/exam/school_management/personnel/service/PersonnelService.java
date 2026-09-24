@@ -110,5 +110,10 @@ public class PersonnelService {
         return personnelRepo.getTeacherList();
     }
 
+    public List<PersonProjos> getOnlyPersonnelList(){
+        List<PersonProjos> list=personnelRepo.getOnlyMPOPersonList();
+        return list;
+    }
+
 
 }

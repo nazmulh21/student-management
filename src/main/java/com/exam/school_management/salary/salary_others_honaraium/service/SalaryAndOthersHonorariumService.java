@@ -11,6 +11,7 @@ import com.exam.school_management.salary.type.model.SalaryTypeInfo;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;

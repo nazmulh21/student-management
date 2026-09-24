@@ -28,11 +28,18 @@ public class ReceivedSalaryService {
     @Transactional // ২. এখানে ট্রানজাকশনাল অ্যানোটেশন যোগ করা হয়েছে
     public List<SalaryReceivedInfo> saveReceivedSalary(List<ReceivedDTO> dtos){
         List<SalaryReceivedInfo> list = new ArrayList<>();
+        BigDecimal staffTotalSalary=BigDecimal.ZERO;
+        String salaryType="";
+        int staffCount=0;
+
 
         for (ReceivedDTO dto : dtos){
+            staffCount+=+1;
             SalaryAndOthersHonorariumInfo salary = salaryAndOthersHonorariumService.findById(dto.getSalaryId());
+            salaryType=salary.getSalaryTypeInfo().getTypeName();
             BigDecimal currentPaid = salary.getPaidSalary() != null ? salary.getPaidSalary() : BigDecimal.ZERO;
             BigDecimal received = dto.getReceivedSalary() != null ? dto.getReceivedSalary() : BigDecimal.ZERO;
+            staffTotalSalary=staffTotalSalary.add(received);
 
             BigDecimal totalPaid = currentPaid.add(received);
             salary.setPaidSalary(totalPaid);
@@ -53,10 +60,13 @@ public class ReceivedSalaryService {
             entity.setStatus("PENDING");
             list.add(entity);
         }
-
+        System.out.println("total salary staff:::"+staffTotalSalary);
+        System.out.println("total salary staff count:::"+staffCount);
 
         return receivedSalaryRepo.saveAll(list);
     }
+
+
 
     public List<SalaryReceivedInfo> getPendingIndividualList(Long personnelId){
         return receivedSalaryRepo.getPendingSalaryList(personnelId);

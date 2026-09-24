@@ -81,6 +81,7 @@ public class PersonnelController {
             entity.setNid(dto.getNid());
             entity.setVillage(dto.getVillage());
             entity.setIsTeacher(dto.getIsTeacher());
+            entity.setIsMPO(dto.getIsMPO());
 
             if (isNumeric(dto.getBloodId())) entity.setBloodInfo(new BloodInfo(Long.parseLong(dto.getBloodId())));
             if (isNumeric(dto.getDistrictId())) entity.setDistrictInfo(new DistrictInfo(Long.parseLong(dto.getDistrictId())));
@@ -295,6 +296,11 @@ public class PersonnelController {
                     .body(personnelImage.getSignatureData());
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/only/mpo/list")
+    public ResponseEntity<?> getOnlyMPOPersonnelList(){
+        return ResponseEntity.ok(personnelService.getOnlyPersonnelList());
     }
 
 
