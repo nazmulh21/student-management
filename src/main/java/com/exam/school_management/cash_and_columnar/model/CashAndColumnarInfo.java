@@ -27,13 +27,13 @@ public class CashAndColumnarInfo {
     @Column(name = "amount")
     private BigDecimal amount;
 
-    @Column(name = "status")
-    private String status;
+    @Column(name = "transaction_type")
+    private String transactionType;
 
     @Column(name = "process_date")
     private LocalDate processDate;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "process_by")
     private PersonnelInfo processBy;
 

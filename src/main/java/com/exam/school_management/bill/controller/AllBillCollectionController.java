@@ -4,9 +4,13 @@ import com.exam.school_management.bill.dto.PaymentCollectionPayLoad;
 import com.exam.school_management.bill.dto.TuitionPaymentDTO;
 import com.exam.school_management.bill.model.MonthlyBillInfo;
 import com.exam.school_management.bill.service.MonthlyBillService;
+import com.exam.school_management.cash_and_columnar.model.CashAndColumnarInfo;
+import com.exam.school_management.cash_and_columnar.service.CashAndColumnarService;
 import com.exam.school_management.others_bill.dto.OtherPaymentDTO;
 import com.exam.school_management.others_bill.model.OthersBillInfo;
 import com.exam.school_management.others_bill.service.OthersBillService;
+import com.exam.school_management.personnel.model.PersonnelInfo;
+import com.exam.school_management.personnel.repo.PersonnelRepo;
 import com.exam.school_management.receipt.model.ReceiptInfo;
 import com.exam.school_management.receipt.service.ReceiptService;
 import com.exam.school_management.students.model.StudentInfo;
@@ -34,12 +38,16 @@ public class AllBillCollectionController {
     private final ReceiptService receiptService;
     private final OthersBillService othersBillService;
     private final TransactionService transactionService;
+    private final CashAndColumnarService cashAndColumnarService;
+    private final PersonnelRepo personnelRepo;
 
-    public AllBillCollectionController(MonthlyBillService monthlyBillService, ReceiptService receiptService, OthersBillService othersBillService, TransactionService transactionService) {
+    public AllBillCollectionController(MonthlyBillService monthlyBillService, ReceiptService receiptService, OthersBillService othersBillService, TransactionService transactionService, CashAndColumnarService cashAndColumnarService, PersonnelRepo personnelRepo) {
         this.monthlyBillService = monthlyBillService;
         this.receiptService = receiptService;
         this.othersBillService = othersBillService;
         this.transactionService = transactionService;
+        this.cashAndColumnarService = cashAndColumnarService;
+        this.personnelRepo = personnelRepo;
     }
 
     @PostMapping("/collect")
@@ -60,11 +68,13 @@ public class AllBillCollectionController {
 
             // একটি মাস্টার লিস্ট তৈরি করুন যা সব সেভ হওয়া রসিদ ধরে রাখবে
             List<ReceiptInfo> savedReceipts = new ArrayList<>();
+            List<CashAndColumnarInfo> columnarList = new ArrayList<>();
 
             // 1. Process Tuition Breakdown
             if (payload.getTuitionBreakdown() != null) {
                 List<MonthlyBillInfo> billsToUpdate = new ArrayList<>();
                 List<ReceiptInfo> list = new ArrayList<>();
+
 
                 for (TuitionPaymentDTO tuition : payload.getTuitionBreakdown()) {
                     if (tuition.getBillId() == null) {
@@ -83,6 +93,22 @@ public class AllBillCollectionController {
                         ReceiptInfo receipt = createReceipt(sharedReceiptNo, "TUITION", tuition.getAmountPaid(), tuition.getDiscount(), existingBill, null,tuition.getCreateBy());
                         list.add(receipt);
 
+                        String monthName= tuition.getMonthName();
+
+                        PersonnelInfo personnel = personnelRepo.findById(tuition.getCreateBy())
+                                .orElseThrow(() -> new RuntimeException("Personnel not found with id: " + tuition.getCreateBy()));
+
+                        CashAndColumnarInfo columnar = new CashAndColumnarInfo();
+                        columnar.setProcessId(existingBill.getMonthlyBillId());
+                        columnar.setProcessName("TUITION_FEE:"+monthName);
+                        columnar.setTransactionType("INCOME"); // টাকা আসছে তাই INCOME
+                        columnar.setAmount(tuition.getAmountPaid());
+                        columnar.setProcessDate(LocalDate.now());
+                        columnar.setProcessDate(LocalDate.now());
+                        columnar.setProcessBy(personnel);
+
+                        columnarList.add(columnar);
+
                     } else {
                         System.out.println("Warning: Tuition Bill ID " + tuition.getBillId() + " not found in database.");
                     }
@@ -91,9 +117,11 @@ public class AllBillCollectionController {
                 if (!billsToUpdate.isEmpty()) {
                     monthlyBillService.collectMonthlyBill(billsToUpdate);
 
+
                     List<ReceiptInfo> savedTuitionReceipts = receiptService.save(list);
                     savedReceipts.addAll(savedTuitionReceipts);
                     System.out.println("Tuition Bills Updated: " + billsToUpdate);
+
                 }
             }
 
@@ -120,6 +148,22 @@ public class AllBillCollectionController {
                         ReceiptInfo receipt = createReceipt(sharedReceiptNo, "Others", dto.getAmountPaid(), dto.getDiscount(), null, existingBill,dto.getCreateBy());
                         receipts.add(receipt);
 
+
+                        PersonnelInfo personnel = personnelRepo.findById(dto.getCreateBy())
+                                .orElseThrow(() -> new RuntimeException("Personnel not found with id: " + existingBill.getCreateBy()));
+
+                        CashAndColumnarInfo columnar = new CashAndColumnarInfo();
+                        columnar.setProcessId(existingBill.getId());
+                        String othersFeesName=existOthers.get().getCollectionCategoryInfo().getCategoryName();
+                        columnar.setProcessName("OTHERS_FEE:"+othersFeesName);
+                        columnar.setTransactionType("INCOME");
+                        columnar.setAmount(dto.getAmountPaid());
+                        columnar.setProcessDate(LocalDate.now());
+                        columnar.setProcessBy(personnel);
+
+                        columnarList.add(columnar);
+                        System.out.println("others details:::"+columnarList);
+
                     } else {
                         System.out.println("Warning: Others Bill ID " + dto.getBillId() + " not found in database.");
                     }
@@ -130,6 +174,10 @@ public class AllBillCollectionController {
 
                     List<ReceiptInfo> savedOtherReceipts = receiptService.save(receipts);
                     savedReceipts.addAll(savedOtherReceipts);
+                }
+                if (!columnarList.isEmpty()) {
+                    cashAndColumnarService.save(columnarList);
+                    System.out.println("Cash and Columnar records saved successfully: " + columnarList.size());
                 }
             }
                 System.out.println("after submit receiptInfo::"+savedReceipts);

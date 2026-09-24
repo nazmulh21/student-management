@@ -3,8 +3,7 @@ package com.exam.school_management.bill.service;
 import com.exam.school_management.bill.dto.BillSummaryDTO;
 import com.exam.school_management.bill.model.MonthlyBillInfo;
 import com.exam.school_management.bill.repo.MonthlyBillRepo;
-import com.exam.school_management.transaction_history.model.TransactionHistoryInfo;
-import com.exam.school_management.transaction_history.service.TransactionService;
+import com.exam.school_management.cash_and_columnar.service.CashAndColumnarService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,11 +13,13 @@ import java.util.*;
 @Transactional
 public class MonthlyBillService {
     private final MonthlyBillRepo monthlyBillRepo;
+    private final CashAndColumnarService cashAndColumnarService;
 
 
-    public MonthlyBillService(MonthlyBillRepo monthlyBillRepo) {
+    public MonthlyBillService(MonthlyBillRepo monthlyBillRepo, CashAndColumnarService cashAndColumnarService) {
         this.monthlyBillRepo = monthlyBillRepo;
 
+        this.cashAndColumnarService = cashAndColumnarService;
     }
 
     public Map<String, Object> doSave(List<MonthlyBillInfo> monthlyBillInfos) {
