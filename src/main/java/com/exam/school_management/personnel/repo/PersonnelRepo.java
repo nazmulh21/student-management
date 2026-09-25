@@ -58,4 +58,10 @@ public interface PersonnelRepo extends JpaRepository<PersonnelInfo,Long> {
             "WHERE (j.status IS NULL OR j.status NOT IN ('Retired', 'Transferred', 'Resigned')) AND p.isMPO=true")
     List<PersonProjos> getOnlyMPOPersonList();
 
+
+    @Query("SELECT p " +
+            "FROM PersonnelInfo p LEFT JOIN p.jobStatusInfo j " +
+            "WHERE (j.status IS NULL OR j.status NOT IN ('Retired', 'Transferred', 'Resigned')) AND p.isMPO=true")
+    List<PersonnelInfo> getOnlyMPOPersonAllDataList();
+
 }

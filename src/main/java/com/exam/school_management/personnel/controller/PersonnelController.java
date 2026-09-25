@@ -203,6 +203,7 @@ public class PersonnelController {
             entity.setNid(dto.getNid());
             entity.setVillage(dto.getVillage());
             entity.setIsTeacher(dto.getIsTeacher());
+            entity.setIsMPO(dto.getIsMPO());
 
             // ৪. ফরেন কি ম্যাপিং (Null-Safe & Type-Safe)
             if (isNumeric(dto.getBloodId())) entity.setBloodInfo(new BloodInfo(Long.parseLong(dto.getBloodId())));
@@ -301,6 +302,11 @@ public class PersonnelController {
     @GetMapping("/only/mpo/list")
     public ResponseEntity<?> getOnlyMPOPersonnelList(){
         return ResponseEntity.ok(personnelService.getOnlyPersonnelList());
+    }
+
+    @GetMapping("/mpo/all/data/list")
+    public ResponseEntity<?> getMPOAllPersonnelList(){
+        return ResponseEntity.ok(personnelService.getOnlyPersonnelAllDataList());
     }
 
 

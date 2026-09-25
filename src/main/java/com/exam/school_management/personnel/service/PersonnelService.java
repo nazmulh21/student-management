@@ -115,5 +115,12 @@ public class PersonnelService {
         return list;
     }
 
+    public List<PersonnelInfo> getOnlyPersonnelAllDataList(){
+        List<PersonnelInfo> list=personnelRepo.getOnlyMPOPersonAllDataList();
+        return list;
+    }
+
+
+
 
 }

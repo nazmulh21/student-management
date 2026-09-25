@@ -32,6 +32,7 @@ public class PersonnelSalaryAssignController {
     @GetMapping("/list")
     public List<PersonnelSalaryAssignInfo> getList(){
         List<PersonnelSalaryAssignInfo> list = personnelSalaryAssignService.list();
+        System.out.println("assign list::"+list);
         return list;
     }
 
