@@ -80,8 +80,8 @@ public class ReceivedSalaryService {
         CashAndColumnarInfo cashAndColumnarInfo = new CashAndColumnarInfo();
 
         // সঠিক নিয়মে if-else ব্যবহার করা হয়েছে
-        if ("MPO Salary".equals(salaryType)) {
-            cashAndColumnarInfo.setTransactionType("INCOME AND EXPENSE");
+        if (salaryType != null && salaryType.toLowerCase().contains("mpo")) {
+            cashAndColumnarInfo.setTransactionType("BOTH");
         } else {
             cashAndColumnarInfo.setTransactionType("Expense"); // অন্য টাইপের জন্য ডিফল্ট ভ্যালু
         }

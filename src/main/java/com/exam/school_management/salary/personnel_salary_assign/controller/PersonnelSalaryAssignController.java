@@ -20,7 +20,7 @@ public class PersonnelSalaryAssignController {
 
     @PostMapping("/save")
     public ResponseEntity<?> save(@RequestBody List<SalaryAssignDTO> dtos){
-        System.out.println("salary data::"+dtos);
+        //System.out.println("salary data::"+dtos);
         return ResponseEntity.ok(personnelSalaryAssignService.doSave(dtos));
     }
 

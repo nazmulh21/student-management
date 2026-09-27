@@ -1,16 +1,23 @@
 package com.exam.school_management.expense.expense_vouchar.service;
 
+import com.exam.school_management.cash_and_columnar.model.CashAndColumnarInfo;
+import com.exam.school_management.cash_and_columnar.service.CashAndColumnarService;
+import com.exam.school_management.expense.category.model.ExpenseCategoryInfo;
+import com.exam.school_management.expense.category.repo.ExpenseCategoryRepo;
 import com.exam.school_management.expense.expense_vouchar.model.ExpenseImageInfo;
 import com.exam.school_management.expense.expense_vouchar.model.ExpenseInfo;
 import com.exam.school_management.expense.expense_vouchar.repo.ExpenseImageRepo;
 import com.exam.school_management.expense.expense_vouchar.repo.ExpenseRepo;
 import com.exam.school_management.personnel.model.PersonnelInfo;
+import com.exam.school_management.personnel.repo.PersonnelRepo;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -18,11 +25,17 @@ import java.util.List;
 public class ExpenseService {
     private final ExpenseRepo expenseRepo;
     private final ExpenseImageRepo expenseImageRepo;
+    private final CashAndColumnarService cashAndColumnarService;
+    private final PersonnelRepo personnelRepo;
+    private final ExpenseCategoryRepo expenseCategoryRepo;
 
     // কনস্ট্রাক্টর বেসড ডিপেন্ডেন্সি ইনজেকশন
-    public ExpenseService(ExpenseRepo expenseRepo, ExpenseImageRepo expenseImageRepo) {
+    public ExpenseService(ExpenseRepo expenseRepo, ExpenseImageRepo expenseImageRepo, CashAndColumnarService cashAndColumnarService, PersonnelRepo personnelRepo, ExpenseCategoryRepo expenseCategoryRepo) {
         this.expenseRepo = expenseRepo;
         this.expenseImageRepo = expenseImageRepo;
+        this.cashAndColumnarService = cashAndColumnarService;
+        this.personnelRepo = personnelRepo;
+        this.expenseCategoryRepo = expenseCategoryRepo;
     }
 
     // একাধিক ইমেজ এবং এক্সপেন্স একসাথে সেভ করার মেথড
@@ -30,7 +43,31 @@ public class ExpenseService {
         // নতুন সেভ করা এক্সপেন্সের ডিফল্ট স্ট্যাটাস "PENDING" সেট করে দেওয়া যেতে পারে
         expenseInfo.setStatus("PENDING");
 
+
         ExpenseInfo savedExpense = expenseRepo.save(expenseInfo);
+        Long createdBy=savedExpense.getCreatedBy().getId();
+
+        String categoryName="";
+        PersonnelInfo personnelInfo = personnelRepo.findById(createdBy)
+                .orElseThrow(() -> new RuntimeException("Personnel not found with id: " + createdBy));
+
+       ExpenseCategoryInfo categoryInfo= expenseCategoryRepo.findById(savedExpense.getExpenseCategoryInfo().getId()).get();
+       if (categoryInfo !=null){
+           categoryName=categoryInfo.getCategoryName();
+       }
+
+
+        List<CashAndColumnarInfo> cashAndColumnarInfoList=new ArrayList<>();
+        CashAndColumnarInfo entity=new CashAndColumnarInfo();
+        entity.setTransactionType("EXPENSE");
+        entity.setAmount(BigDecimal.valueOf(savedExpense.getTotal()));
+        entity.setProcessBy(personnelInfo);
+        entity.setProcessDate(LocalDate.now());
+        entity.setProcessName(categoryName);
+        entity.setProcessId(savedExpense.getId());
+        cashAndColumnarInfoList.add(entity);
+        cashAndColumnarService.save(cashAndColumnarInfoList);
+
 
         if (files != null && !files.isEmpty()) {
             for (MultipartFile file : files) {
