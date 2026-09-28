@@ -34,6 +34,7 @@ public class ReceivedSalaryService {
 
     @Transactional
     public List<SalaryReceivedInfo> saveReceivedSalary(List<ReceivedDTO> dtos){
+        //System.out.println("dtos"+dtos);
         if (dtos == null || dtos.isEmpty()) {
             throw new IllegalArgumentException("DTO list cannot be null or empty");
         }
@@ -43,6 +44,8 @@ public class ReceivedSalaryService {
         BigDecimal staffTotalSalary = BigDecimal.ZERO;
         String salaryType = "";
         int staffCount = 0;
+
+        String othersTypeName = null; // ডিফল্টভাবে null রাখা হলো
 
         // 1. Get the senderId from the first DTO
         Long senderId = dtos.get(0).getSenderId();
@@ -54,10 +57,17 @@ public class ReceivedSalaryService {
         for (ReceivedDTO dto : dtos){
             staffCount += 1;
             SalaryAndOthersHonorariumInfo salary = salaryAndOthersHonorariumService.findById(dto.getSalaryId());
-            salaryType = salary.getSalaryTypeInfo().getTypeName();
+            System.out.println("salary ::: "+salary);
+
+            salaryType = salary.getSalaryTypeInfo() != null ? salary.getSalaryTypeInfo().getTypeName() : "";
             BigDecimal currentPaid = salary.getPaidSalary() != null ? salary.getPaidSalary() : BigDecimal.ZERO;
             BigDecimal received = dto.getReceivedSalary() != null ? dto.getReceivedSalary() : BigDecimal.ZERO;
             staffTotalSalary = staffTotalSalary.add(received);
+
+            // সেফটি চেক: othersTypeInfo এবং its name নাল কি না যাচাই করা হচ্ছে
+            if(salary.getOthersTypeInfo() != null && salary.getOthersTypeInfo().getOthersTypeName() != null){
+                othersTypeName = salary.getOthersTypeInfo().getOthersTypeName();
+            }
 
             BigDecimal totalPaid = currentPaid.add(received);
             salary.setPaidSalary(totalPaid);
@@ -79,14 +89,20 @@ public class ReceivedSalaryService {
 
         CashAndColumnarInfo cashAndColumnarInfo = new CashAndColumnarInfo();
 
-        // সঠিক নিয়মে if-else ব্যবহার করা হয়েছে
+        // সঠিক নিয়মে if-else ব্যবহার করা হয়েছে
         if (salaryType != null && salaryType.toLowerCase().contains("mpo")) {
             cashAndColumnarInfo.setTransactionType("BOTH");
         } else {
             cashAndColumnarInfo.setTransactionType("Expense"); // অন্য টাইপের জন্য ডিফল্ট ভ্যালু
         }
 
-        cashAndColumnarInfo.setProcessName("Total:" + staffCount + " Staff:" + salaryType);
+        // প্রসেস নেম সেট করার সময় othersTypeName চেক করা হচ্ছে
+        if(othersTypeName != null && !othersTypeName.trim().isEmpty()){
+            cashAndColumnarInfo.setProcessName("Total:" + staffCount + " Staff:" + othersTypeName);
+        } else {
+            cashAndColumnarInfo.setProcessName("Total:" + staffCount + " Staff:" + salaryType);
+        }
+
         cashAndColumnarInfo.setAmount(staffTotalSalary);
         cashAndColumnarInfo.setProcessDate(LocalDate.now());
         cashAndColumnarInfo.setProcessBy(personnelInfo);

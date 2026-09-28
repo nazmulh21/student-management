@@ -100,7 +100,7 @@ public class AllBillCollectionController {
 
                         CashAndColumnarInfo columnar = new CashAndColumnarInfo();
                         columnar.setProcessId(existingBill.getMonthlyBillId());
-                        columnar.setProcessName("TUITION_FEE:"+monthName);
+                        columnar.setProcessName("TUITION: " +monthName);
                         columnar.setTransactionType("INCOME"); // টাকা আসছে তাই INCOME
                         columnar.setAmount(tuition.getAmountPaid());
                         columnar.setProcessDate(LocalDate.now());
@@ -155,7 +155,7 @@ public class AllBillCollectionController {
                         CashAndColumnarInfo columnar = new CashAndColumnarInfo();
                         columnar.setProcessId(existingBill.getId());
                         String othersFeesName=existOthers.get().getCollectionCategoryInfo().getCategoryName();
-                        columnar.setProcessName("OTHERS_FEE:"+othersFeesName);
+                        columnar.setProcessName("OTHERS_FEES: "+othersFeesName);
                         columnar.setTransactionType("INCOME");
                         columnar.setAmount(dto.getAmountPaid());
                         columnar.setProcessDate(LocalDate.now());
