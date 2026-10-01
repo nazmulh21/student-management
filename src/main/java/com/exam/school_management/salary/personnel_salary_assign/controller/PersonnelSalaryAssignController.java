@@ -4,6 +4,7 @@ import com.exam.school_management.salary.personnel_salary_assign.dto.SalaryAssig
 import com.exam.school_management.salary.personnel_salary_assign.model.PersonnelSalaryAssignInfo;
 import com.exam.school_management.salary.personnel_salary_assign.service.PersonnelSalaryAssignService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,7 +18,7 @@ public class PersonnelSalaryAssignController {
     public PersonnelSalaryAssignController(PersonnelSalaryAssignService personnelSalaryAssignService) {
         this.personnelSalaryAssignService = personnelSalaryAssignService;
     }
-
+    @PreAuthorize("hasAnyAuthority('SALARY_ASSIGNMENTS')")
     @PostMapping("/save")
     public ResponseEntity<?> save(@RequestBody List<SalaryAssignDTO> dtos){
         //System.out.println("salary data::"+dtos);

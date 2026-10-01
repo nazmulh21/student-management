@@ -54,6 +54,26 @@ public class UserController {
         }
     }
 
+    //@PreAuthorize("hasAnyAuthority('USER_PASSWORD_UPDATE')")
+    @PutMapping("/update-password/{index}/{oldPassword}/{newPassword}")
+    public ResponseEntity<?> oldPasswordUpdate(
+            @PathVariable String index,
+            @PathVariable String oldPassword,
+            @PathVariable String newPassword) {
+        try {
+            // সার্ভিস কল করা
+            userService.oldPasswordUpdate(index, oldPassword, newPassword);
+
+            // সফল হলে এই মেসেজ ফ্রন্টে যাবে
+            return ResponseEntity.ok(Map.of("message", "Password updated successfully!"));
+
+        } catch (RuntimeException e) {
+            // পুরানো পাসওয়ার্ড না মিললে বা ইউজার না পাওয়া গেলে এই মেসেজ ফ্রন্টে চলে যাবে
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody UserLoginDto loginDto, HttpServletResponse response) {
         Optional<UserInfo> userOptional = userService.findByUserName(loginDto.getUsername());

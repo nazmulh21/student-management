@@ -4,6 +4,7 @@ import com.exam.school_management.salary.received_salary.dto.ReceivedDTO;
 import com.exam.school_management.salary.received_salary.model.SalaryReceivedInfo;
 import com.exam.school_management.salary.received_salary.service.ReceivedSalaryService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -18,11 +19,13 @@ public class ReceivedSalaryController {
         this.receivedSalaryService = receivedSalaryService;
     }
 
+    @PreAuthorize("hasAnyAuthority('STAFF_BILL_PAYMENT')")
     @PostMapping("/save")
     public ResponseEntity<?> save(@RequestBody List<ReceivedDTO> dtos){
         return ResponseEntity.ok(receivedSalaryService.saveReceivedSalary(dtos));
     }
 
+    @PreAuthorize("hasAnyAuthority('SALARY_PENDING_LIST')")
     @GetMapping("/pending/list/{personnelId}")
     public ResponseEntity<?> getPendingIndividualList(@PathVariable Long personnelId){
         List<SalaryReceivedInfo> list=receivedSalaryService.getPendingIndividualList(personnelId);

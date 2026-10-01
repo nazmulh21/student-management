@@ -16,6 +16,7 @@ import com.exam.school_management.students.service.StudentService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -91,7 +92,7 @@ public class AttendanceController {
         }
     }
 
-
+@PreAuthorize("hasAnyAuthority('SCHOOL_ATTENDANCE')")
     @PostMapping("/qrcode/teacher/{trimmedId}")
     public ResponseEntity<?> teacherAttendance(@PathVariable String trimmedId, HttpServletRequest request) {
         try {
@@ -170,6 +171,7 @@ public class AttendanceController {
         return request.getRemoteAddr();
     }
 
+    @PreAuthorize("hasAnyAuthority('SCHOOL_ATTENDANCE')")
     @PostMapping("/qrcode/student/{trimmedId}")
     public ResponseEntity<?> studentAttendance(
             @PathVariable String trimmedId,

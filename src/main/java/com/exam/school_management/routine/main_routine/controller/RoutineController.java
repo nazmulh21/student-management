@@ -6,6 +6,7 @@ import com.exam.school_management.routine.main_routine.dto.RoutineProjos;
 import com.exam.school_management.routine.main_routine.dto.TeacherResponseDto;
 import com.exam.school_management.routine.main_routine.service.RoutineService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,6 +31,8 @@ public class RoutineController {
         return routineService.getFreeTeacherList(dayId,hourId);
     }
 
+
+    @PreAuthorize("hasAnyAuthority('GAP_CLASS')")
     @GetMapping("/grouped-routine")
     public ResponseEntity<List<RoutineProjos>> getGroupedRoutine() {
         List<RoutineProjos> groupedRoutines = routineService.getGroupedRoutine();

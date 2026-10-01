@@ -191,4 +191,19 @@ public class UserService implements UserDetailsService {
         return userRepository.findAll();
     }
 
+    public UserInfo oldPasswordUpdate(String index, String oldPassword, String newPassword) {
+        // ইউজার না পাওয়া গেলে এক্সেপশন থ্রো করা
+        UserInfo userInfo = userRepository.findByPersonnelInfoIndex(index)
+                .orElseThrow(() -> new RuntimeException("User not found!"));
+
+        // পুরানো পাসওয়ার্ড না মিললে এক্সেপশন থ্রো করা
+        if (!passwordEncoder.matches(oldPassword, userInfo.getPassword())) {
+            throw new RuntimeException("Old password does not match!");
+        }
+
+        // পাসওয়ার্ড আপডেট করা
+        userInfo.setPassword(passwordEncoder.encode(newPassword));
+        return userRepository.save(userInfo);
+    }
+
 }
