@@ -101,7 +101,6 @@ public class StudentInfo {
     private ScholarshipInfo scholarshipInfo;
 
 
-
     @Column(name = "village")
     private String village;
 
