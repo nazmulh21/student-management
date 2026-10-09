@@ -198,7 +198,7 @@ public class StudentController {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (principal instanceof CustomUserDetails) {
             Long userId = ((CustomUserDetails) principal).getId();
-            System.out.println("বর্তমানে লগইন করা ইউজারের আইডি: " + userId);
+            //System.out.println("বর্তমানে লগইন করা ইউজারের আইডি: " + userId);
         }
         return studentService.getAllStudent();
     }

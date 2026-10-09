@@ -9,19 +9,16 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/sms")
 public class SmsController {
 
-
     private final SmsService smsService;
 
     public SmsController(SmsService smsService) {
         this.smsService = smsService;
     }
 
-    // এক বা একাধিক ছাত্রকে মেসেজ পাঠানোর এন্ডপেইন্ট
     @PostMapping("/send")
     public ResponseEntity<String> sendSmsToStudents(@RequestBody SmsRequestDto request) {
-        // request.getPhoneNumbers() হলো ছাত্রদের ফোন নম্বরের লিস্ট
-        // request.getMessage() হলো মেসেজের বডি
+        // এখানে সরাসরি কনসোলে প্রিন্ট করার সার্ভিস কল হচ্ছে
         smsService.sendBulkSms(request.getPhoneNumbers(), request.getMessage());
-        return ResponseEntity.ok("সফলভাবে মেসেজ পাঠানো হয়েছে!");
+        return ResponseEntity.ok("সফলভাবে মেসেজ কনসোলে প্রিন্ট করা হয়েছে!");
     }
 }
