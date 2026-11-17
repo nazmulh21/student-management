@@ -16,6 +16,8 @@ import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.Year;
 import java.util.*;
 
 @Service
@@ -31,7 +33,9 @@ public class AcademicResultService {
 
 
     public List<AcademicResultInfo> save(List<AcademicResultDTO> dtos) {
+        System.out.println("dtos::" + dtos);
         List<AcademicResultInfo> list = new ArrayList<>();
+
         for (AcademicResultDTO dto : dtos) {
             AcademicResultInfo acd;
 
@@ -41,11 +45,20 @@ public class AcademicResultService {
                 acd = new AcademicResultInfo();
             }
 
-            acd.setStudentInfo(new StudentInfo(dto.getStudentId()));
+            // 🌟 সমাধান: ডাটাবেজ থেকে খুঁজে আনা আসল StudentInfo অবজেক্টটি সেট করুন
+            StudentInfo studentInfo = studentService.findById(dto.getStudentId())
+                    .orElseThrow(() -> new RuntimeException("Student not found with ID: " + dto.getStudentId()));
+
+            acd.setStudentInfo(studentInfo);
+            acd.setAcademicYear(studentInfo.getAcademicYear());
+
             acd.setSubjectInfo(new SubjectInfo(dto.getSubjectId()));
             acd.setClassInfo(new ClassInfo(dto.getClassId()));
             acd.setCategoryInfo(new CollectionCategoryInfo(dto.getExamId()));
-            acd.setGroupInfo(new GroupInfo(dto.getGroupId()));
+
+            if (dto.getGroupId() != null && dto.getGroupId() > 0) {
+                acd.setGroupInfo(new GroupInfo(dto.getGroupId()));
+            }
 
             // সেফ কনভার্শন
             acd.setMcqMark(dto.getMcqMark() != null ? dto.getMcqMark() : 0.0);
@@ -64,19 +77,14 @@ public class AcademicResultService {
                 acd.setAbsent("");
             }
 
-            StudentInfo studentInfo = studentService.findById(dto.getStudentId()).orElse(null);
-            if (studentInfo != null) {
-                acd.setAcademicYear(studentInfo.getAcademicYear());
-            }
-
             acd.setCreateDate(new Date());
             acd.setCreateBy(dto.getUserId());
 
             list.add(acd);
         }
+
         return academicResultRepo.saveAll(list);
     }
-
 
     public List<AcademicResultInfo> getList(Long classId, Long subjectId, Long examId){
        return academicResultRepo.findByClassInfoIdAndSubjectInfoIdAndCategoryInfoId(classId,subjectId,examId);
@@ -87,22 +95,35 @@ public class AcademicResultService {
     }
 
 
-    public List<StudentResultDTO> getGroupedResults(Long classId, Long examId,Long year) {
-        List<AcademicResultInfo> results = academicResultRepo.findByClassInfo_IdAndCategoryInfo_IdAndAcademicYear(classId, examId,year);
-               //System.out.println("resultsss"+results);
+    public List<StudentResultDTO> getGroupedResults(Long classId, Long examId, Long year) {
+        List<AcademicResultInfo> results = academicResultRepo.findByClassInfo_IdAndCategoryInfo_IdAndAcademicYear(classId, examId, year);
         Map<Long, StudentResultDTO> studentMap = new LinkedHashMap<>();
 
         for (AcademicResultInfo res : results) {
-            Long sId = res.getStudentInfo().getId();
-            studentMap.putIfAbsent(sId, new StudentResultDTO());
-            Optional<StudentInfo> studentInfo=studentService.findById(sId);
-            StudentResultDTO dto = studentMap.get(sId);
-            dto.setStudentId(sId);
-            dto.setStudentName(res.getStudentInfo().getStudentName());
-            dto.setRoll(res.getStudentInfo().getRoll());
-            dto.setGroupName(studentInfo.get().getGroupInfo().getGroupName());
-            dto.setAcademicYear(res.getAcademicYear());
+            // ১. যদি কোনো রেকর্ডে studentInfo বা subjectInfo null থাকে, তবে সেটি স্কিপ করবে
+            if (res.getStudentInfo() == null || res.getSubjectInfo() == null) {
+                continue;
+            }
 
+            StudentInfo student = res.getStudentInfo();
+            Long studentId = student.getId();
+
+            if (studentId == null) {
+                continue;
+            }
+
+            // ২. ম্যাপে স্টুডেন্ট না থাকলে নতুন DTO তৈরি করে বেসিক তথ্য একবারই সেট করবে
+            StudentResultDTO dto = studentMap.computeIfAbsent(studentId, id -> {
+                StudentResultDTO newDto = new StudentResultDTO();
+                newDto.setStudentId(studentId);
+                newDto.setStudentName(student.getStudentName());
+                newDto.setRoll(student.getRoll());
+                newDto.setGroupName(student.getGroupInfo() != null ? student.getGroupInfo().getGroupName() : "N/A");
+                newDto.setAcademicYear(res.getAcademicYear());
+                return newDto;
+            });
+
+            // ৩. সাবজেক্টের মার্কস ম্যাপে যুক্ত করা
             SubjectMarkDTO markDto = new SubjectMarkDTO();
             markDto.setSubjectName(res.getSubjectInfo().getSubjectName());
             markDto.setMcq(res.getMcqMark());
@@ -112,10 +133,9 @@ public class AcademicResultService {
 
             dto.getMarks().put(res.getSubjectInfo().getId(), markDto);
         }
-        //System.out.println("Result list::"+studentMap);
+
         return new ArrayList<>(studentMap.values());
     }
-
 
 
 

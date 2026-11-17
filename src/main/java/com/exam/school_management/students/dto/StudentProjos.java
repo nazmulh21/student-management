@@ -34,6 +34,13 @@ public class StudentProjos {
         this.groupName = groupName;
     }
 
+    public StudentProjos( Long stuId,Long roll, String studentName, String groupName) {
+        this.stuId =stuId;
+        this.roll = roll;
+        this.studentName = studentName;
+        this.groupName = groupName;
+    }
+
     public StudentProjos( Long stuId,String studentName,Long roll, String className) {
         this.stuId = stuId;
         this.studentName = studentName;

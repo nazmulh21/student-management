@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/academic-result")
@@ -19,9 +20,9 @@ public class AcademicResultController {
     }
 
     @PostMapping("/save")
-    public ResponseEntity<?> save(@RequestBody List<AcademicResultDTO> dtos){
-
-        return ResponseEntity.ok(academicResultService.save(dtos));
+    public ResponseEntity<?> save(@RequestBody List<AcademicResultDTO> dtos) {
+        academicResultService.save(dtos);
+        return ResponseEntity.ok(Map.of("message", "Marks saved successfully!"));
     }
 
     @GetMapping("/list/{classId}/{subjectId}/{examId}")
@@ -42,7 +43,7 @@ public class AcademicResultController {
             @PathVariable Long year)
        {
            List<StudentResultDTO> list=academicResultService.getGroupedResults(classId, examId,year);
-           System.out.println("List data"+list);
+           //System.out.println("List data"+list);
 
         return list;
     }
