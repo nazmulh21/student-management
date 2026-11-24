@@ -15,4 +15,14 @@ public interface SalaryAndOthersHonorariumRepo extends JpaRepository<SalaryAndOt
     List<SalaryAndOthersHonorariumInfo> getDuesSalary(
             @Param("salaryTypeId") Long salaryTypeId
     );
+
+
+    @Query("SELECT s FROM SalaryAndOthersHonorariumInfo s " +
+            "WHERE s.personnelInfo.id = :personnelId " +
+            "AND (:salaryTypeId IS NULL OR s.salaryTypeInfo.id = :salaryTypeId) " +
+            "AND s.duesSalary > 0")
+    List<SalaryAndOthersHonorariumInfo> getUnpaidPersonnelDues(
+            @Param("salaryTypeId") Long salaryTypeId,
+            @Param("personnelId") Long personnelId
+    );
 }

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Year;
 import java.util.Date;
@@ -52,13 +53,11 @@ public class ReceiptSummaryController {
             @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
             @PathVariable Long stuId
     ){
-        System.out.println("startDate" + startDate);
-        System.out.println("endDate" + endDate);
-        System.out.println("stuId" + stuId);
+
         List<ReceiptSummaryDTO> list = receiptService.getStudentPaidReport(startDate, endDate, stuId);
-        System.out.println("report Data;:" + list);
         return list;
     }
+
 
 
 }

@@ -6,6 +6,7 @@ import com.exam.school_management.leave_management.model.LeaveRequestInfo;
 import com.exam.school_management.leave_management.service.LeaveManagementService;
 import com.exam.school_management.personnel.model.PersonnelInfo;
 import com.exam.school_management.personnel.service.PersonnelService;
+import com.exam.school_management.receipt.service.ReceiptService;
 import com.exam.school_management.routine.main_routine.model.SubstituteInfo;
 import com.exam.school_management.routine.main_routine.service.SubstituteService;
 import com.exam.school_management.salary.received_salary.model.SalaryReceivedInfo;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
 import java.time.Year;
 import java.util.List;
 
@@ -30,14 +32,16 @@ public class DashboardController {
     private final ExpenseService expenseService;
     private final SubstituteService substituteService;
     private final ReceivedSalaryService receivedSalaryService;
+    private final ReceiptService receiptService;
 
-    public DashboardController(LeaveManagementService leaveManagementService, PersonnelService personnelService, StudentService studentService, ExpenseService expenseService, SubstituteService substituteService, ReceivedSalaryService receivedSalaryService) {
+    public DashboardController(LeaveManagementService leaveManagementService, PersonnelService personnelService, StudentService studentService, ExpenseService expenseService, SubstituteService substituteService, ReceivedSalaryService receivedSalaryService, ReceiptService receiptService) {
         this.leaveManagementService = leaveManagementService;
         this.personnelService = personnelService;
         this.studentService = studentService;
         this.expenseService = expenseService;
         this.substituteService = substituteService;
         this.receivedSalaryService = receivedSalaryService;
+        this.receiptService = receiptService;
     }
 
 
@@ -52,6 +56,7 @@ public class DashboardController {
         List<ExpenseInfo> getAllPendingExpenseList=expenseService.getPendingList();
         List<SubstituteInfo> getAllPendingGapClass=substituteService.getPendingGapList(personnelId);
         List<SalaryReceivedInfo> getAllPendingSalaryList=receivedSalaryService.getPendingIndividualList(personnelId);
+        BigDecimal todayTotalCollection=receiptService.getTodayTotalCollection();
         dashboardDTO.setSentBackRequests(sentBackList);
         dashboardDTO.setLeaveRequests(leaveRequests);
         dashboardDTO.setPersonnelList(personnelList);
@@ -59,6 +64,7 @@ public class DashboardController {
         dashboardDTO.setAllPendingExpenses(getAllPendingExpenseList);
         dashboardDTO.setAllPendingGapClass(getAllPendingGapClass);
         dashboardDTO.setAllPendingSalaryList(getAllPendingSalaryList);
+        dashboardDTO.setTodayTotalCollections(todayTotalCollection);
        return ResponseEntity.ok(dashboardDTO);
 
     }

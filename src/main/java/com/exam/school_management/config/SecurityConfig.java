@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,22 +32,43 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                /*.securityContext((securityContext) -> securityContext
-                        .requireExplicitSave(false)
-                )*/
                 .authorizeHttpRequests(auth -> auth
-                        // ১. শুধুমাত্র লগইন ও রেজিস্ট্রেশন এন্ডপয়েন্ট পাবলিক রাখুন
-                        .requestMatchers("/api/auth/login",  "/api/auth/forgot-password", "/api/auth/reset-password-confirm","/api/auth/logout").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(
+                                "/api/auth/login",
+                                "/api/auth/forgot-password",
+                                "/api/auth/reset-password-confirm",
+                                "/api/auth/logout",
+                                "/student-photos/**",
+                                "/verify-student/**",
+                                "/ssc/process-selected",
+                                "student/all-active",
+                                "/gap/**",
+                                "/personnel/get-list/**",
+                                "/leave-type/**",
+                                "/api/leave-requests/**",
+                                "/leave-balance/**",
+                                "/dashboard/**",
+                                "/religion/hello",
+                                "/leave-history/list/**",
+                                "/attendance/**",
+                                "/salary/**",
+                                "/salary/personnel/dues/**"
 
-                        // ২. ছবি বা অন্য পাবলিক স্ট্যাটিক ফাইল
-                        .requestMatchers("/student-photos/**", "/verify-student/**","/ssc/process-selected").permitAll()
-                        .requestMatchers("/role/**","/leave-type/**","/api/leave-requests/**","/student/all-active/**","/class-subject-mark/**","/personnel/**","/attendance/**","/leave-balance/**","/academic_year/**","/leave-history/**","/receipt/report/**","/expense/**","/day/**","/hour/**","/routine/**","/gap/**","/received/salary/**","/property/**","/cash-and-columnar/**","/academic-result/**").permitAll()
-                        .requestMatchers("/class/list", "/subject/list").authenticated()
 
-                        // ৩. অন্যান্য সব রিকোয়েস্ট অথেন্টিকেটেড হতে হবে (এর ভেতরেই '/api/auth/me' থাকবে)
-                        .requestMatchers("/api/auth/me","/api/auth/register").authenticated()
-                        .requestMatchers("/collection-category/**","/academic-result/**").authenticated()
+                        ).permitAll()
+
+                        // ড্যাশবোর্ড, স্টুডেন্ট এবং গ্যাপ লিস্টের রুটগুলো অথেন্টিকেটেড বা পারমিটেড করা
+
+                        .requestMatchers("/student/**", "/api/student/**").authenticated()
+                        .requestMatchers("/personnel/**", "/api/personnel/**").authenticated()
+                        .requestMatchers("/expense/**", "/api/expense/**").authenticated()                        .requestMatchers("/gap/**", "/api/gap/**").authenticated()
+                        .requestMatchers("/api/auth/me", "/api/auth/register").authenticated()
+                       // .requestMatchers("/attendance/**").authenticated()
+
+
                         .anyRequest().authenticated()
+
                 )
                 // ফিল্টার চেইন
                 .addFilterBefore(cacheControlFilter, UsernamePasswordAuthenticationFilter.class)
@@ -60,11 +80,25 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // শুধু আপনার ফ্রন্টএন্ড ডোমেইন দিন
-        config.setAllowedOrigins(List.of("http://localhost:3000"));
+        config.setAllowedOriginPatterns(Arrays.asList(
+                "http://localhost:3000",
+                "http://127.0.0.1:*",
+                "http://192.168.*.*:*",
+                "http://10.*.*.*:*",
+                "http://144.79.249.253",
+                "http://144.79.249.253:*",
+                "https://144.79.249.253",
+                "https://144.79.249.253:*",
+                "http://*.kankirhatgirls.com",
+                "http://kankirhatgirls.com",
+                "https://*.kankirhatgirls.com",
+                "https://kankirhatgirls.com"
+        ));
+
+        //config.addAllowedOrigin("http://localhost:3000");
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type", "Cookie", "X-Requested-With"));
-        config.setAllowCredentials(true); // এটি 'true' থাকতেই হবে
+        config.setAllowCredentials(true);
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

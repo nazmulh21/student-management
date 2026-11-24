@@ -8,6 +8,7 @@ import com.exam.school_management.salary.received_salary.model.SalaryReceivedInf
 import com.exam.school_management.students.model.StudentInfo;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -19,6 +20,7 @@ public class DashboardDTO {
     private List<ExpenseInfo> allPendingExpenses;
     private List<SubstituteInfo> allPendingGapClass;
     private List<SalaryReceivedInfo> allPendingSalaryList;
+    private BigDecimal todayTotalCollections;
 
 
 }

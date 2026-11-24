@@ -19,18 +19,18 @@ public class ReligionController {
     }
 
     @PostMapping("/save")
-    public ResponseEntity<?> save(@RequestBody ReligionInfo religionInfo){
+    public ResponseEntity<?> save(@RequestBody ReligionInfo religionInfo) {
         return ResponseEntity.ok(religionService.doSave(religionInfo));
     }
 
     @GetMapping("/{id}")
-    public Optional<ReligionInfo> findClassInfo(@PathVariable Long id){
+    public Optional<ReligionInfo> findClassInfo(@PathVariable Long id) {
         return religionService.getReligion(id);
     }
 
     @GetMapping("/list")
-    public List<ReligionInfo> getList(){
-        List<ReligionInfo> list= religionService.list();
+    public List<ReligionInfo> getList() {
+        List<ReligionInfo> list = religionService.list();
         return list;
     }
 
@@ -49,9 +49,12 @@ public class ReligionController {
     }
 
     @DeleteMapping("/delete/{id}")
-    public void doDelete(@PathVariable Long id){
+    public void doDelete(@PathVariable Long id) {
         religionService.delete(id);
     }
 
-
+    @GetMapping("/hello")
+    public String hello() {
+        return "hello world";
+    }
 }

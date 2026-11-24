@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
@@ -62,6 +63,11 @@ public interface ReceiptRepo extends JpaRepository<ReceiptInfo,Long> {
             @Param("endDate") LocalDate endDate,
             @Param("stuId") Long stuId
     );
+
+    @Query("SELECT COALESCE(SUM(r.paidAmount), 0) FROM ReceiptInfo r WHERE r.paymentDate = :date")
+    BigDecimal getTotalCollectionByDate(@Param("date") LocalDate date);
+
+
     }
 
 

@@ -77,4 +77,8 @@ public class SalaryAndOthersHonorariumService {
     }
 
 
+    public List<SalaryAndOthersHonorariumInfo> getAllPersonnelDues(Long salaryTypeId, Long personnelId) {
+        return salaryAndOthersHonorariumRepo.getUnpaidPersonnelDues(salaryTypeId,personnelId);
+    }
+
 }

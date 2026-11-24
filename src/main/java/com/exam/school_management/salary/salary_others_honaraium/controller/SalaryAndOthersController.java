@@ -32,4 +32,19 @@ public class SalaryAndOthersController {
 
         return list;
     }
+
+
+    @GetMapping("/personnel/dues/{salaryTypeId}/{personnelId}")
+    public List<SalaryAndOthersHonorariumInfo> getPersonnelDues(
+            @PathVariable Long personnelId,
+            @PathVariable(required = false) String salaryTypeId) {
+
+        Long parsedSalaryTypeId = (salaryTypeId == null
+                || salaryTypeId.isBlank()
+                || "null".equalsIgnoreCase(salaryTypeId.trim()))
+                ? null
+                : Long.valueOf(salaryTypeId.trim());
+
+        return salaryAndOthersHonorariumService.getAllPersonnelDues(parsedSalaryTypeId, personnelId);
+    }
 }
