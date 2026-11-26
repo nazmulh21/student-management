@@ -32,4 +32,7 @@ public interface ClassSubjectMarkRepo extends JpaRepository<ClassSubjectMarkInfo
 
     @Query("select new com.exam.school_management.exam.class_subject_mark.dto.ClassSubjectProjos(c.id,c.subjectInfo.subjectName) from ClassSubjectMarkInfo c where c.groupInfo.id=:groupId and c.classInfo.id =:classId")
     List<ClassSubjectProjos> getGroupSubject(@Param("groupId")Long groupId,@Param("classId")Long classId);
+
+    @Query("select s from ClassSubjectMarkInfo s where s.classInfo.id =:classId")
+    List<ClassSubjectMarkInfo> getSubjectListByClassId(@Param("classId")Long classId);
 }

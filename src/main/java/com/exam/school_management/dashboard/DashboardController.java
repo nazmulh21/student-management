@@ -57,6 +57,7 @@ public class DashboardController {
         List<SubstituteInfo> getAllPendingGapClass=substituteService.getPendingGapList(personnelId);
         List<SalaryReceivedInfo> getAllPendingSalaryList=receivedSalaryService.getPendingIndividualList(personnelId);
         BigDecimal todayTotalCollection=receiptService.getTodayTotalCollection();
+        BigDecimal monthlyIncome=receiptService.getCurrentMonthIncome();
         dashboardDTO.setSentBackRequests(sentBackList);
         dashboardDTO.setLeaveRequests(leaveRequests);
         dashboardDTO.setPersonnelList(personnelList);
@@ -65,6 +66,7 @@ public class DashboardController {
         dashboardDTO.setAllPendingGapClass(getAllPendingGapClass);
         dashboardDTO.setAllPendingSalaryList(getAllPendingSalaryList);
         dashboardDTO.setTodayTotalCollections(todayTotalCollection);
+        dashboardDTO.setMonthlyIncome(monthlyIncome);
        return ResponseEntity.ok(dashboardDTO);
 
     }

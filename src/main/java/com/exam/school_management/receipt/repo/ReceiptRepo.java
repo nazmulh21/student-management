@@ -68,7 +68,13 @@ public interface ReceiptRepo extends JpaRepository<ReceiptInfo,Long> {
     BigDecimal getTotalCollectionByDate(@Param("date") LocalDate date);
 
 
+    @Query("SELECT COALESCE(SUM(r.paidAmount), 0) FROM ReceiptInfo r " +
+            "WHERE r.paymentDate BETWEEN :startDate AND :endDate")
+    BigDecimal getTotalCollectionBetweenDates(@Param("startDate") LocalDate startDate,
+                                              @Param("endDate") LocalDate endDate);
     }
+
+
 
 
 

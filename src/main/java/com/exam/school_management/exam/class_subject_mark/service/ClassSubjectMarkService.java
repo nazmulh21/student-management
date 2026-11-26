@@ -51,4 +51,13 @@ public class ClassSubjectMarkService {
         return marksAssignSubjectRepo.getGroupSubject(groupId,classId);
     }
 
+    public List<ClassSubjectMarkInfo> getSubjectListByClassId(Long classId){
+        return marksAssignSubjectRepo.getSubjectListByClassId(classId);
+    }
+
+    public ClassSubjectMarkInfo findById(Long id) {
+        return marksAssignSubjectRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("ClassSubjectMarkInfo not found with id: " + id));
+    }
+
 }

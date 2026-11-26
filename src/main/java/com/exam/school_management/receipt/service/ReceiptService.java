@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.Date;
 import java.util.List;
 
@@ -49,5 +50,20 @@ public class ReceiptService {
     public BigDecimal getTodayTotalCollection(){
         LocalDate today = LocalDate.now();
         return receiptRepo.getTotalCollectionByDate(today);
+    }
+
+    public BigDecimal getCurrentMonthIncome() {
+        YearMonth ym = YearMonth.now();
+        LocalDate startDate = ym.atDay(1);
+        LocalDate endDate = ym.atEndOfMonth();
+
+        LocalDate today = LocalDate.now();
+        boolean isMonthEnded = today.equals(endDate);
+
+        if (isMonthEnded) {
+            // আজ মাসের শেষ দিন
+        }
+
+        return receiptRepo.getTotalCollectionBetweenDates(startDate, endDate);
     }
 }

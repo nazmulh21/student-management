@@ -4,6 +4,7 @@ import lombok.Data;
 
 @Data
 public class ClassSubjectMarkDTO {
+    private Long id;            // আপডেট করার জন্য যুক্ত করা হলো
     private Long classId;
     private Long groupId;
     private Long subjectId;

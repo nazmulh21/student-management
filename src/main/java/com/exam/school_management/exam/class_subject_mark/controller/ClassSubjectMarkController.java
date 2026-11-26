@@ -24,13 +24,21 @@ public class ClassSubjectMarkController {
     @PostMapping("/save")
     public ResponseEntity<?> save(@RequestBody ClassSubjectMarkDTO dto) {
 
-        boolean isExist = classSubjectMarkService.existsByClassAndSubject(dto.getClassId(),dto.getGroupId(), dto.getSubjectId());
+        boolean isUpdate = dto.getId() != null;
 
-        if (isExist) {
-            return ResponseEntity.badRequest().body("This class and subject already exist!");
+        if (!isUpdate) {
+            boolean isExist = classSubjectMarkService.existsByClassAndSubject(
+                    dto.getClassId(), dto.getGroupId(), dto.getSubjectId()
+            );
+            if (isExist) {
+                return ResponseEntity.badRequest().body("This class and subject already exist!");
+            }
         }
 
-        ClassSubjectMarkInfo entity = new ClassSubjectMarkInfo();
+        ClassSubjectMarkInfo entity = isUpdate
+                ? classSubjectMarkService.findById(dto.getId())
+                : new ClassSubjectMarkInfo();
+
         entity.setClassInfo(new ClassInfo(dto.getClassId()));
         entity.setGroupInfo(new GroupInfo(dto.getGroupId()));
         entity.setSubjectInfo(new SubjectInfo(dto.getSubjectId()));
@@ -67,5 +75,13 @@ public class ClassSubjectMarkController {
     @GetMapping("/group/sub/{groupId}/{classId}")
     public List<ClassSubjectProjos> getAllGroupSub(@PathVariable Long groupId,@PathVariable Long classId){
         return classSubjectMarkService.getAllGroupSubjects(groupId,classId);
+    }
+
+
+    @GetMapping("/subjects/{classId}")
+    public List<ClassSubjectMarkInfo> getSubjectsByClassId(@PathVariable Long classId){
+        List<ClassSubjectMarkInfo> subjectList=classSubjectMarkService.getSubjectListByClassId(classId);
+        System.out.println("subject list::"+subjectList);
+        return subjectList;
     }
 }

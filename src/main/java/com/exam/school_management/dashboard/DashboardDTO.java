@@ -21,6 +21,7 @@ public class DashboardDTO {
     private List<SubstituteInfo> allPendingGapClass;
     private List<SalaryReceivedInfo> allPendingSalaryList;
     private BigDecimal todayTotalCollections;
+    private BigDecimal monthlyIncome;
 
 
 }
